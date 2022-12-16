@@ -1,65 +1,55 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from shelters.models import Pet
+
 
 class User(AbstractUser):
     """ Пользователи проекта с ролями:
-        Аноним,
-        Аутентифицированный пользователь,
         Владелец приюта,
         Волонтер приюта,
         Модератор контента,
         Администратор
     """
 
-    USER = 'user'
-    SHELTER_OWNER = 'shelre_owner'
-    VOLUNTEER = 'volunteer'
-    MODERATOR = 'moderator'
-    ADMIN = 'admin'
     ROLE_CHOICES = (
-        (USER, 'Аутентифицированный пользователь'),
-        (SHELTER_OWNER, 'shelre_owner'),
-        (VOLUNTEER, 'volunteer')
-        (ADMIN, 'Администратор'),
-        (MODERATOR, 'Модератор контента')
+        ('SHELTER_OWNER', 'shelre_owner'),
+        ('VOLUNTEER', 'volunteer')
+        ('ADMIN', 'Администратор'),
+        ('MODERATOR', 'Модератор контента')
     )
-    username = models.CharField(
-        verbose_name='Имя пользователя',
-        help_text='Введите имя пользователя',
-        max_length=150,
-        null=False,
-        unique=True
-    )
-    email = models.EmailField(
-        verbose_name='Адрес электронной почты',
-        help_text='Введите адрес эл. почты',
-        unique=True,
-        max_length=254
-    )
+
     status = models.CharField(
         verbose_name='Статус',
         help_text='Выберите статус пользователя',
         max_length=50,
         choices=ROLE_CHOICES,
-        default=USER
+        default=None
+    )
+    subscription = models.ManyToManyField(
+        Pet,
+        verbose_name='Подписка на животное',
+        related_name='user',
+        blank=True,
+        through='UserPet',
+        through_fields=('user', 'pet')
     )
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN
+        return self.role == 'ADMIN'
 
     @property
     def is_moderator(self):
-        return self.role == self.MODERATOR
+        return self.role == 'MODERATOR'
 
     @property
     def is_shelter_owner(self):
-        return self.role == self.SHELTER_OWNER
+        return self.role == 'SHELTER_OWNER'
 
     @property
     def is_volunteer(self):
-        return self.role == self.VOLUNTEER
+        return self.role == 'VOLUNTEER'
 
     def __str__(self):
         return self.username
@@ -68,3 +58,25 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
+
+
+class UserPet(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    pet = models.ForeignKey(
+        Pet,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    want_to_adopt = models.BooleanField(
+        verbose_name='Хочу приютить',
+        default=False
+    )
+
+    def __str__(self):
+        return f'{self.user} следит за судьбой: {self.animal}'
