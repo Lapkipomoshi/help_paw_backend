@@ -20,7 +20,7 @@ class Shelter(models.Model):
     long = models.DecimalField('Долгота', max_digits=9, decimal_places=6)
     lat = models.DecimalField('Широта', max_digits=9, decimal_places=6)
     gallery = models.ManyToManyField(
-        Image, verbose_name='Галлерея изображений'
+        Image, verbose_name='Галерея изображений'
     )
 
     class Meta:
@@ -33,7 +33,8 @@ class Shelter(models.Model):
 
 class Task(models.Model):
     shelter = models.ForeignKey(
-        'Shelter', related_name='task', on_delete=models.CASCADE
+        'Shelter', related_name='task', on_delete=models.CASCADE,
+        verbose_name='Приют'
     )
     name = models.CharField(
         'Краткое описание', max_length=50,

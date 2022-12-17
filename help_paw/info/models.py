@@ -5,7 +5,8 @@ from ..shelters.models import Shelter
 
 class Vacancy(models.Model):
     shelter = models.ForeignKey(
-        Shelter, related_name='vacancy', on_delete=models.CASCADE
+        Shelter, related_name='vacancy', on_delete=models.CASCADE,
+        verbose_name='Вакансия в приют'
     )
     position = models.CharField(
         'Доложность', max_length=30, help_text='Введите название должности'
@@ -20,6 +21,9 @@ class Vacancy(models.Model):
         verbose_name = 'Вакансия'
         verbose_name_plural = 'Вакансии'
         ordering = ('-pub_date', )
+
+    def __str__(self):
+        return self.position
 
 
 class OwnVacancy(models.Model):
@@ -37,6 +41,9 @@ class OwnVacancy(models.Model):
         verbose_name_plural = 'Свои Вакансии'
         ordering = ('-pub_date',)
 
+    def __str__(self):
+        return self.position
+
 
 class Image(models.Model):
     image = models.ImageField(
@@ -49,3 +56,6 @@ class Image(models.Model):
         verbose_name = 'Изображение'
         verbose_name_plural = 'Изображения'
         ordering = ('-pub_date', )
+
+    def __str__(self):
+        return self.image.name
