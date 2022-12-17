@@ -31,8 +31,7 @@ class User(AbstractUser):
         verbose_name='Подписка на животное',
         related_name='user',
         blank=True,
-        through='UserPet',
-        through_fields=('user', 'pet')
+        through='UserPet'
     )
 
     @property
@@ -63,15 +62,11 @@ class User(AbstractUser):
 class UserPet(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True
+        on_delete=models.CASCADE
     )
     pet = models.ForeignKey(
         Pet,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True
+        on_delete=models.CASCADE
     )
     want_to_adopt = models.BooleanField(
         verbose_name='Хочу приютить',
@@ -79,4 +74,4 @@ class UserPet(models.Model):
     )
 
     def __str__(self):
-        return f'{self.user} следит за судьбой: {self.animal}'
+        return f'{self.user} следит за судьбой: {self.pet}'
