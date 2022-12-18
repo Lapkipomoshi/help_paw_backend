@@ -1,38 +1,36 @@
 from django.db import models
 
 
-class Shelter(models.Model):
-    """Приют"""
-    name_shelter = models.CharField(
-        'Название приюта',
-        max_length=100, 
-        db_index=True
-    )
-
-    def __str__(self):
-        return self.name_shelter
 
 
 class Pet(models.Model):
     """Карточка животного"""
+    
+    ANIMAL_TYPE = [
+    ('DOG', 'dog'),
+    ('CAT', 'cat'),
+]
     name = models.CharField(
         'Кличка животного',
         max_length=100
     )
-    category = models.ChoiceField(
-        'Категория животного',
-        max_length=100, 
-        db_index=True
+    animal_type = models.ChoiceField(
+        'Тип животного',
+        choices=ANIMAL_TYPE,
+        default = None,
+        max_length = 10     
     )
-    about_pet = models.TextField(
+    about = models.TextField(
         'Описание животного',
         help_text='Расскажите о животном'
     )
-    photo_pet = models.ImageField(
+    photo = models.ImageField(
         'Фото животного',
         upload_to = 'photo/%Y/%m/%d/'
     )
-    name_shelter = models.ForeignKey(Shelter,
+    shelter = models.ForeignKey(
+        'Shelter',
+        related_name='pets',
         on_delete=models.PROTECT
     )
 
