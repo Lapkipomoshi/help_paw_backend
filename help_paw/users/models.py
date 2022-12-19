@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from shelters.models import Pet
+from shelters.models import Pet, Shelter
 
 
 class User(AbstractUser):
@@ -12,8 +12,12 @@ class User(AbstractUser):
         Администратор
     """
 
+    SHELTER_OWNER = 'shelter_owner'
+    VOLUNTEER = 'volunteer'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
     ROLE_CHOICES = (
-        ('SHELTER_OWNER', 'shelre_owner'),
+        ('SHELTER_OWNER', 'shelter_owner'),
         ('VOLUNTEER', 'volunteer')
         ('ADMIN', 'Администратор'),
         ('MODERATOR', 'Модератор контента')
@@ -26,29 +30,36 @@ class User(AbstractUser):
         choices=ROLE_CHOICES,
         default=None
     )
-    subscription = models.ManyToManyField(
+    subscription_pet = models.ManyToManyField(
         Pet,
         verbose_name='Подписка на животное',
-        related_name='user',
+        related_name='users',
         blank=True,
         through='UserPet'
+    )
+    subscription_shelter = models.ManyToManyField(
+        Shelter,
+        verbose_name='Подписка на приют',
+        related_name='users',
+        blank=True,
+        through='UserShelter'
     )
 
     @property
     def is_admin(self):
-        return self.role == 'ADMIN'
+        return self.role == self.ADMIN
 
     @property
     def is_moderator(self):
-        return self.role == 'MODERATOR'
+        return self.role == self.MODERATOR
 
     @property
     def is_shelter_owner(self):
-        return self.role == 'SHELTER_OWNER'
+        return self.role == self.SHELTER_OWNER
 
     @property
     def is_volunteer(self):
-        return self.role == 'VOLUNTEER'
+        return self.role == self.VOLUNTEER
 
     def __str__(self):
         return self.username
@@ -75,3 +86,21 @@ class UserPet(models.Model):
 
     def __str__(self):
         return f'{self.user} следит за судьбой: {self.pet}'
+
+
+class UserShelter(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+    shelter = models.ForeignKey(
+        Shelter,
+        on_delete=models.CASCADE
+    )
+    is_volunteer = models.BooleanField(
+        verbose_name='Я волонтер',
+        default=False
+    )
+
+    def __str__(self):
+        return f'{self.user} подписан на приют: {self.shelter}'

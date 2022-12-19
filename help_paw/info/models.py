@@ -4,7 +4,7 @@ from django.db import models
 class FAQ(models.Model):
     """Ответы на часто задаваемые вопросы"""
 
-    title = models.CharField(
+    question = models.CharField(
         'Заголовок вопроса',
         help_text='Вопрос для FAQ',
         max_length=200
@@ -14,12 +14,12 @@ class FAQ(models.Model):
         help_text='Напишите четкий полезный ответ'
     )
 
-    def __str__(self):
-        return self.title
-
     class Meta:
-        ordering = ('title',)
+        ordering = ('question',)
         verbose_name_plural = 'Ответы на частые вопросы'
+
+    def __str__(self):
+        return self.question
 
 
 class StaticInfo(models.Model):
