@@ -1,24 +1,26 @@
 from django.db import models
 
-from ..info.models import Image
-
 
 class Pet(models.Model):
     """Карточка животного"""
-    
+    CAT = 'cat'
+    DOG = 'dog'
+    OTHER = 'other'
+
     ANIMAL_TYPE = [
-    ('DOG', 'dog'),
-    ('CAT', 'cat'),
-]
+        (CAT, 'Кошка'),
+        (DOG, 'Собака'),
+        (OTHER, 'Другое')
+    ]
     name = models.CharField(
         'Кличка животного',
         max_length=100
     )
-    animal_type = models.ChoiceField(
+    animal_type = models.CharField(
         'Тип животного',
         choices=ANIMAL_TYPE,
-        default = None,
-        max_length = 10     
+        default=OTHER,
+        max_length=10
     )
     about = models.TextField(
         'Описание животного',
@@ -26,7 +28,7 @@ class Pet(models.Model):
     )
     photo = models.ImageField(
         'Фото животного',
-        upload_to = 'photo/%Y/%m/%d/'
+        upload_to='photo/%Y/%m/%d/'
     )
     shelter = models.ForeignKey(
         'Shelter',
@@ -52,7 +54,7 @@ class Shelter(models.Model):
     long = models.DecimalField('Долгота', max_digits=9, decimal_places=6)
     lat = models.DecimalField('Широта', max_digits=9, decimal_places=6)
     gallery = models.ManyToManyField(
-        Image, verbose_name='Галерея изображений'
+        'info.Image', verbose_name='Галерея изображений'
     )
 
     class Meta:

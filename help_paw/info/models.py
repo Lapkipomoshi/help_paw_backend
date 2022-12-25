@@ -1,9 +1,11 @@
 from django.db import models
 
-from ..shelters.models import Shelter
-
 
 class News(models.Model):
+    header = models.CharField(
+        'Заголовок', max_length=50,
+        help_text='Введите заголовок новости, максимум 50 символов'
+    )
     text = models.TextField(
         'Текст новости',
         help_text='Введите текст поста'
@@ -13,12 +15,11 @@ class News(models.Model):
         auto_now_add=True
     )
 
+    class Meta:
+        ordering = ('-pub_date', )
 
-class Meta:
-    ordering = ('-pub_date')
-
-def __str__(self):
-        return self.text
+    def __str__(self):
+        return self.header[:10]
 
 
 class FAQ(models.Model):
@@ -68,7 +69,9 @@ class StaticInfo(models.Model):
 
 class Vacancy(models.Model):
     shelter = models.ForeignKey(
-        Shelter, related_name='vacancy', on_delete=models.CASCADE,
+        'shelters.Shelter',
+        related_name='vacancy',
+        on_delete=models.CASCADE,
         verbose_name='Вакансия в приют'
     )
     position = models.CharField(
