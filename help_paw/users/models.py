@@ -21,12 +21,17 @@ class User(AbstractUser):
         (MODERATOR, 'Модератор контента')
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
     status = models.CharField(
         verbose_name='Статус',
         help_text='Выберите статус пользователя',
         max_length=50,
         choices=ROLE_CHOICES,
-        default=None
+        default=None,
+        null=True
+
     )
     subscription_pet = models.ManyToManyField(
         'shelters.Pet',
@@ -41,6 +46,13 @@ class User(AbstractUser):
         related_name='subscribers',
         blank=True,
         through='UserShelter'
+    )
+
+    email = models.EmailField(
+        verbose_name='Адрес электронной почты',
+        unique=True,
+        max_length=254,
+        null=False
     )
 
     @property

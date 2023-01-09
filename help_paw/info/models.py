@@ -16,6 +16,7 @@ class News(models.Model):
     )
 
     class Meta:
+        verbose_name_plural = 'Новости'
         ordering = ('-pub_date', )
 
     def __str__(self):
@@ -62,6 +63,9 @@ class StaticInfo(models.Model):
         'Контакты',
         help_text='Укажите контакты'
     )
+
+    class Meta:
+        verbose_name_plural = 'Статичная информация'
 
     def __str__(self):
         return self.about_us

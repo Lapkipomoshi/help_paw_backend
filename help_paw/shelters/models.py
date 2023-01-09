@@ -36,6 +36,13 @@ class Pet(models.Model):
         on_delete=models.PROTECT
     )
 
+    class Meta:
+        verbose_name = 'Питомец'
+        verbose_name_plural = 'Питомцы'
+
+    def __str__(self):
+        return f'{self.name} - {self. animal_type}'
+
 
 class Shelter(models.Model):
     name = models.CharField(
