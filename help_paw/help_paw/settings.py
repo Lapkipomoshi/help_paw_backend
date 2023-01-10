@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'users.apps.UsersConfig',
     'shelters.apps.SheltersConfig',
-    'info.apps.InfoConfig'
+    'info.apps.InfoConfig',
+    'api.apps.ApiConfig'
 ]
 
 MIDDLEWARE = [
