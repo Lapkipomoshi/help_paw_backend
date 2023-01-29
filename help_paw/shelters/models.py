@@ -1,4 +1,13 @@
+from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator
 from django.db import models
+
+User = get_user_model()
+
+
+class ApprovedSheltersManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_approved=True)
 
 
 class Pet(models.Model):
@@ -35,6 +44,7 @@ class Pet(models.Model):
         related_name='pets',
         on_delete=models.PROTECT
     )
+    is_adopted = models.BooleanField('Нашел дом', default=False)
 
     class Meta:
         verbose_name = 'Питомец'
@@ -45,8 +55,12 @@ class Pet(models.Model):
 
 
 class Shelter(models.Model):
+    owner = models.ForeignKey(
+        User, on_delete=models.PROTECT, verbose_name='Владелец приюта',
+        related_name='shelter'
+    )
     name = models.CharField(
-        'Название', max_length=30, unique=True,
+        'Название', max_length=50, unique=True,
         help_text='Введите название приюта'
     )
     description = models.TextField(
@@ -55,14 +69,36 @@ class Shelter(models.Model):
     logo = models.ImageField(
         'Логотип', null=True, blank=True, help_text='Загрузите логотип приюта'
     )
-    address = models.TextField(
-        'Адрес', null=True, blank=True, help_text='Укажите адрес приюта'
+    profile_image = models.ImageField(
+        'Фото профиля', null=True, blank=True,
+        help_text='Загрузите фото профиля'
     )
+    address = models.TextField(
+        'Адрес', blank=True, help_text='Укажите адрес приюта'
+    )
+    phone_number = models.CharField(
+        'Телефон приюта', max_length=12, blank=True,
+        validators=[RegexValidator(regex=r'^\+?1?\d{9,11}$')],
+        help_text='Укажите телефон приюта'
+    )
+    email = models.EmailField(
+        'Электронная почта', max_length=254, blank=True,
+        help_text='Укажите почту для связи с приютом'
+    )
+    web_site = models.URLField(
+        'Сайт', max_length=200, blank=True,
+        help_text='Укажите сайт приюта'
+    )
+    working_hours = models.CharField(
+        'Режим работы', max_length=13,
+        help_text='Укажите режим работы в формате "hh:mm - hh:mm"'
+    )
+    is_approved = models.BooleanField('Приют проверен', default=False)
     long = models.DecimalField('Долгота', max_digits=9, decimal_places=6)
     lat = models.DecimalField('Широта', max_digits=9, decimal_places=6)
-    gallery = models.ManyToManyField(
-        'info.Image', verbose_name='Галерея изображений'
-    )
+
+    objects = models.Manager()
+    approved = ApprovedSheltersManager()
 
     class Meta:
         verbose_name = 'Приют'
