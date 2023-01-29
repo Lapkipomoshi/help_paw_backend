@@ -1,7 +1,9 @@
 from django.db import models
 
+from shelters.models import Shelter
 
-class News(models.Model):
+
+class Article(models.Model):
     header = models.CharField(
         'Заголовок', max_length=50,
         help_text='Введите заголовок новости, максимум 50 символов'
@@ -14,10 +16,63 @@ class News(models.Model):
         'Дата публикации',
         auto_now_add=True
     )
+    profile_image = models.ImageField(
+        'Основное изображение', help_text='Выберите основное изображение'
+    )
 
     class Meta:
+        abstract = True
+
+
+class Vacancy(models.Model):
+    position = models.CharField(
+        'Доложность', max_length=30, help_text='Введите название должности'
+    )
+    description = models.TextField(
+        'Описание', help_text='Опишите подробности вакансии'
+    )
+    pub_date = models.DateField('Дата публикации', auto_now_add=True)
+    is_closed = models.BooleanField('Вакансия закрыта', default=False)
+
+    class Meta:
+        abstract = True
+
+
+class News(Article):
+    shelter = models.ForeignKey(
+        Shelter, null=True, blank=True, default=None, on_delete=models.CASCADE,
+        verbose_name='Новость от приюта', related_name='news'
+    )
+    image_1 = models.ImageField(
+        'Фото 1', blank=True, help_text='Выберите дополнительное фото'
+    )
+    image_2 = models.ImageField(
+        'Фото 2', blank=True, help_text='Выберите дополнительное фото'
+    )
+    image_3 = models.ImageField(
+        'Фото 3', blank=True, help_text='Выберите дополнительное фото'
+    )
+    on_main = models.BooleanField('Отображать на главной', default=False)
+
+    class Meta:
+        verbose_name = 'Новость'
         verbose_name_plural = 'Новости'
         ordering = ('-pub_date', )
+
+    def __str__(self):
+        return self.header[:10]
+
+
+class HelpArticle(Article):
+    source = models.URLField(
+        'Источник', max_length=200,
+        help_text='Укажите источник новости (url адрес)'
+    )
+
+    class Meta:
+        verbose_name = 'Полезная статья'
+        verbose_name_plural = 'Полезные статьи'
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.header[:10]
@@ -71,41 +126,24 @@ class StaticInfo(models.Model):
         return self.about_us
 
 
-class Vacancy(models.Model):
+class ShelterVacancy(Vacancy):
     shelter = models.ForeignKey(
         'shelters.Shelter',
         related_name='vacancy',
         on_delete=models.CASCADE,
         verbose_name='Вакансия в приют'
     )
-    position = models.CharField(
-        'Доложность', max_length=30, help_text='Введите название должности'
-    )
-    description = models.TextField(
-        'Описание', help_text='Опишите подробности вакансии'
-    )
-    pub_date = models.DateField('Дата публикации', auto_now_add=True)
-    is_closed = models.BooleanField('Вакансия закрыта', default=False)
 
     class Meta:
         verbose_name = 'Вакансия'
-        verbose_name_plural = 'Вакансии'
+        verbose_name_plural = 'Вакансии приютов'
         ordering = ('-pub_date', )
 
     def __str__(self):
         return self.position
 
 
-class OwnVacancy(models.Model):
-    position = models.CharField(
-        'Доложность', max_length=30, help_text='Введите название должности'
-    )
-    description = models.TextField(
-        'Описание', help_text='Опишите подробности вакансии'
-    )
-    pub_date = models.DateField('Дата публикации', auto_now_add=True)
-    is_closed = models.BooleanField('Вакансия закрыта', default=False)
-
+class OwnVacancy(Vacancy):
     class Meta:
         verbose_name = 'Своя Вакансия'
         verbose_name_plural = 'Свои Вакансии'
@@ -113,19 +151,3 @@ class OwnVacancy(models.Model):
 
     def __str__(self):
         return self.position
-
-
-class Image(models.Model):
-    image = models.ImageField(
-        'Изображение', upload_to='temporary/',
-        help_text='Выберите изображение для загрузки'
-    )
-    pub_date = models.DateTimeField('Дата загрузки', auto_now_add=True)
-
-    class Meta:
-        verbose_name = 'Изображение'
-        verbose_name_plural = 'Изображения'
-        ordering = ('-pub_date', )
-
-    def __str__(self):
-        return self.image.name
