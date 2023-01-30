@@ -1,4 +1,4 @@
-name: PR_CLOSED TG ALERT
+name: PR_CLOSED DEPLOY AND TG ALERT
 
 on:
   pull_request:
