@@ -11,11 +11,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 import os
-# import sentry_sdk
+import sentry_sdk
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
-# from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv()
 
@@ -99,23 +99,13 @@ if LOCAL:
         }
     }
 
-    # sentry_sdk.init(
-    #     dsn="https://39d47110ae3249d386898b9957135ff4@o4504027365441536.ingest.sentry.io/4504576170196992",
-    #     integrations=[
-    #         DjangoIntegration(),
-    #     ],
-    #     traces_sample_rate=1.0,
-    #     send_default_pii=True
-    # )
-
-
 else:
     DATABASES = {
         'default': {
             'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
             'NAME': os.getenv('DB_NAME', default='postgres'),
             'USER': os.getenv('POSTGRES_USER', default='postgres'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='mb$bpvmf'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='mbbpvmf'),
             'HOST': os.getenv('DB_HOST', default='localhost'),
             'PORT': os.getenv('DB_PORT', default='5432')
         }
