@@ -37,7 +37,6 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
           password: ${{ secrets.PASSWORD }}
           script: |
             cd ~/test
