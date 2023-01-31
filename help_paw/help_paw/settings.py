@@ -63,10 +63,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.custom_middleware.CatchErrorsMiddleware'
 ]
 
-if LOCAL is False:
-    MIDDLEWARE.append('api.custom_middleware.CatchErrorsMiddleware')
+
 
 ROOT_URLCONF = 'help_paw.urls'
 

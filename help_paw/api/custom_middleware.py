@@ -1,7 +1,7 @@
 import sys
 import traceback
 import telebot
-from help_paw.settings import ALERT_TO, ALERT_TOKEN
+from help_paw.settings import ALERT_TO, ALERT_TOKEN, LOCAL
 from django.utils.deprecation import MiddlewareMixin
 
 
@@ -15,5 +15,6 @@ class CatchErrorsMiddleware(MiddlewareMixin):
         for s in string_to_unpack:
             string_to_send = string_to_send + s + '\n'
         string_to_send += '---------------Конец трейса---------------'
-        bot.send_message(ALERT_TO, string_to_send)
+        if LOCAL is False:
+            bot.send_message(ALERT_TO, string_to_send)
 
