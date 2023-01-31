@@ -15,6 +15,5 @@ class CatchErrorsMiddleware(MiddlewareMixin):
         for s in string_to_unpack:
             string_to_send = string_to_send + s + '\n'
         string_to_send += '---------------Конец трейса---------------'
-        if LOCAL is False:
-            bot.send_message(ALERT_TO, string_to_send)
+        bot.send_message(ALERT_TO, string_to_send)
 
