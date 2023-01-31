@@ -11,4 +11,4 @@ psycopg2-binary==2.9.5
 python-dotenv==0.19.0
 drf-yasg==1.21.4
 django-filter==22.1
-
+pyTelegramBotAPI==4.9.0

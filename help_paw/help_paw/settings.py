@@ -17,6 +17,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+LOCAL = os.getenv('LOCAL', default=True)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -63,6 +65,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+if LOCAL is False:
+    MIDDLEWARE.append('api.custom_middleware.CatchErrorsMiddleware')
+
 ROOT_URLCONF = 'help_paw.urls'
 
 TEMPLATES = [
@@ -87,7 +92,7 @@ WSGI_APPLICATION = 'help_paw.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-LOCAL = os.getenv('LOCAL', default=True)
+
 
 if LOCAL:
     DATABASES = {
@@ -178,3 +183,6 @@ SIMPLE_JWT = {
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
 }
+
+ALERT_TOKEN = os.getenv('BOT', default='5981522036:AAH01gLswbB1YuKYXNGy6xQYpOTXtbZ8qrU')
+ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')

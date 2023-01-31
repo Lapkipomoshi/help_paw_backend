@@ -51,6 +51,8 @@ jobs:
             echo DB_PORT=${{ secrets.DB_PORT }} >> .env
             echo D_KEY=${{ secrets.D_KEY }} >> .env
             echo LOCAL=${{ secrets.LOCAL }} >> .env
+            echo BOT=${{ secrets.BOT }} >> .env
+            echo ALERT_CHANNEL=${{ secrets.ALERT_CHANNEL }} >> .env
             sudo docker-compose pull
             sudo docker-compose up -d
 
