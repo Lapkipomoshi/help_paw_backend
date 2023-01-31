@@ -184,5 +184,5 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
 }
 
-ALERT_TOKEN = os.getenv('BOT', default='5981522036:AAH01gLswbB1YuKYXNGy6xQYpOTXtbZ8qrU')
+ALERT_TOKEN = os.getenv('BOT')
 ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
