@@ -28,7 +28,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('D_KEY', default='django-insecure-&unen+ahaflwyd0me5^tlgl@$c3enwp!hw)r!xy74-3yypt#nr')
+SECRET_KEY = os.getenv(
+    'D_KEY', default='django-insecure-&unen+ahaflwyd0me5^tlgl@$c3enwp!hw)r!xy74-3yypt#nr')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -67,7 +68,6 @@ MIDDLEWARE = [
 ]
 
 
-
 ROOT_URLCONF = 'help_paw.urls'
 
 TEMPLATES = [
@@ -93,8 +93,6 @@ WSGI_APPLICATION = 'help_paw.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 
-
-
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.sqlite3'),
@@ -105,8 +103,6 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', default='5432')
     }
 }
-
-
 
 
 # Password validation
@@ -168,8 +164,9 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-   'AUTH_HEADER_TYPES': ('Bearer',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'BLACKLIST_AFTER_ROTATION': False,
 }
 
 SWAGGER_SETTINGS = {
