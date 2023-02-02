@@ -1,0 +1,45 @@
+version: '3.3'
+services:
+
+  frontend:
+    image: jinglemybells/help_paw_f:latest
+    volumes:
+      - ../frontend/:/app/result_build/
+
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+
+  backend:
+    image: jinglemybells/help_paw:latest
+    restart: always
+    volumes:
+      - static_value:/app/static_files/
+      - media_value:/app/media/
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+
+  nginx:
+    image: nginx:1.19.3
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../frontend/build:/usr/share/nginx/html/
+      - static_value:/var/html/static_files/
+      - ./lapkipomoshi.ru.crt:/etc/nginx/ssl/lapkipomoshi.ru.crt
+      - ./lapkipomoshi.ru.key:/etc/nginx/ssl/lapkipomoshi.ru.key
+      - media_value:/var/html/media/
+    depends_on:
+      - backend
+
+volumes:
+  static_value:
+  media_value:
+  postgres:

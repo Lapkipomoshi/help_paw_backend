@@ -13,6 +13,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
+
+LOCAL = os.getenv('LOCAL', default=True)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,12 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&unen+ahaflwyd0me5^tlgl@$c3enwp!hw)r!xy74-3yypt#nr'
+SECRET_KEY = os.getenv('D_KEY', default='django-insecure-&unen+ahaflwyd0me5^tlgl@$c3enwp!hw)r!xy74-3yypt#nr')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -40,12 +45,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_yasg',
     'rest_framework',
+    'django_filters',
+    'djoser',
     'users.apps.UsersConfig',
     'shelters.apps.SheltersConfig',
     'info.apps.InfoConfig',
     'api.apps.ApiConfig',
-    'djoser',
 ]
 
 MIDDLEWARE = [
@@ -56,7 +63,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.custom_middleware.CatchErrorsMiddleware'
 ]
+
+
 
 ROOT_URLCONF = 'help_paw.urls'
 
@@ -82,12 +92,21 @@ WSGI_APPLICATION = 'help_paw.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+
+
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', default=os.path.join(BASE_DIR, 'db.sqlite3')),
+        'USER': os.getenv('POSTGRES_USER', default='postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='mbbpvmf'),
+        'HOST': os.getenv('DB_HOST', default='localhost'),
+        'PORT': os.getenv('DB_PORT', default='5432')
     }
 }
+
+
 
 
 # Password validation
@@ -124,8 +143,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
-MEDIA_URL = 'media/'
+STATIC_URL = '/static_files/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static_files')
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
@@ -151,3 +171,10 @@ SIMPLE_JWT = {
    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
    'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+}
+
+ALERT_TOKEN = os.getenv('BOT')
+ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
