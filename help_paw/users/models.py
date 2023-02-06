@@ -11,12 +11,12 @@ class User(AbstractUser):
     """
 
     SHELTER_OWNER = 'shelter_owner'
-    VOLUNTEER = 'volunteer'
+    USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
     ROLE_CHOICES = (
         (SHELTER_OWNER, 'Владелец приюта'),
-        (VOLUNTEER, 'Волонтер'),
+        (USER, 'Пользователь'),
         (ADMIN, 'Администратор'),
         (MODERATOR, 'Модератор контента')
     )
@@ -29,9 +29,7 @@ class User(AbstractUser):
         help_text='Выберите статус пользователя',
         max_length=50,
         choices=ROLE_CHOICES,
-        default=None,
-        null=True
-
+        default=USER
     )
     subscription_pet = models.ManyToManyField(
         'shelters.Pet',
@@ -68,8 +66,8 @@ class User(AbstractUser):
         return self.status == self.SHELTER_OWNER
 
     @property
-    def is_volunteer(self):
-        return self.status == self.VOLUNTEER
+    def is_user(self):
+        return self.status == self.USER
 
     def __str__(self):
         return self.username

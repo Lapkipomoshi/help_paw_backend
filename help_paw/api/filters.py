@@ -4,7 +4,12 @@ from shelters.models import Shelter
 
 
 class SheltersFilter(FilterSet):
-    warnings = CharFilter(method='get_by_colour')
+    """Фильтрация по наличию задач у приюта"""
+    warnings = CharFilter(
+        method='get_by_colour',
+        help_text=('Фильтрация приютов по наличию задач, возможные значения: '
+                   '"red", "yellow", "green"')
+    )
 
     class Meta:
         model = Shelter
