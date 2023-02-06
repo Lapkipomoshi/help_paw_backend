@@ -55,7 +55,7 @@ class Pet(models.Model):
 
 
 class Shelter(models.Model):
-    owner = models.ForeignKey(
+    owner = models.OneToOneField(
         User, on_delete=models.PROTECT, verbose_name='Владелец приюта',
         related_name='shelter'
     )
@@ -78,7 +78,7 @@ class Shelter(models.Model):
     )
     phone_number = models.CharField(
         'Телефон приюта', max_length=12, blank=True,
-        validators=[RegexValidator(regex=r'^\+?1?\d{9,11}$')],
+        validators=[RegexValidator(regex=r'^\+\d{11}$')],
         help_text='Укажите телефон приюта'
     )
     email = models.EmailField(
@@ -94,8 +94,12 @@ class Shelter(models.Model):
         help_text='Укажите режим работы в формате "hh:mm - hh:mm"'
     )
     is_approved = models.BooleanField('Приют проверен', default=False)
-    long = models.DecimalField('Долгота', max_digits=9, decimal_places=6)
-    lat = models.DecimalField('Широта', max_digits=9, decimal_places=6)
+    long = models.DecimalField(
+        'Долгота', max_digits=13, decimal_places=10, blank=True, null=True
+    )
+    lat = models.DecimalField(
+        'Широта', max_digits=13, decimal_places=10, blank=True, null=True
+    )
 
     objects = models.Manager()
     approved = ApprovedSheltersManager()

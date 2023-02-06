@@ -9,12 +9,10 @@ class Article(models.Model):
         help_text='Введите заголовок новости, максимум 50 символов'
     )
     text = models.TextField(
-        'Текст новости',
-        help_text='Введите текст поста'
+        'Текст новости', help_text='Введите текст поста'
     )
     pub_date = models.DateTimeField(
-        'Дата публикации',
-        auto_now_add=True
+        'Дата публикации', auto_now_add=True
     )
     profile_image = models.ImageField(
         'Основное изображение', help_text='Выберите основное изображение'
@@ -128,9 +126,7 @@ class StaticInfo(models.Model):
 
 class ShelterVacancy(Vacancy):
     shelter = models.ForeignKey(
-        'shelters.Shelter',
-        related_name='vacancy',
-        on_delete=models.CASCADE,
+        Shelter, related_name='vacancy', on_delete=models.CASCADE,
         verbose_name='Вакансия в приют'
     )
 
