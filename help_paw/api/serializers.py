@@ -1,8 +1,34 @@
+from django.contrib.auth import get_user_model
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
+from djoser.serializers import UserCreateSerializer, UserSerializer
 
 from info.models import FAQ, HelpArticle, News
 from shelters.models import Shelter
+
+
+User = get_user_model()
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'password')
+
+
+class CustomUserSerializer(UserSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'subscription_pet',
+            'subscription_shelter',
+            'status',
+        )
+        read_only_fields = ('status',)
 
 
 class NewsSerializer(serializers.ModelSerializer):
