@@ -6,29 +6,14 @@ from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from api.serializers import (CustomUserSerializer, CustomUserCreateSerializer,
-                             FAQSerializer, HelpArticleSerializer,
+from api.serializers import (FAQSerializer, HelpArticleSerializer,
                              HelpArticleShortSerializer, NewsSerializer,
                              ShelterSerializer, ShelterShortSerializer)
 from info.models import FAQ, HelpArticle, News
 from shelters.models import Shelter
-from users.models import User
 
 from .filters import SheltersFilter
 from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    """Пользователи"""
-    queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
-    permission_classes = (IsAdminModerOrReadOnly,)
-
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return CustomUserCreateSerializer
-        else:
-            return CustomUserSerializer
 
 
 class NewsViewSet(viewsets.ModelViewSet):
