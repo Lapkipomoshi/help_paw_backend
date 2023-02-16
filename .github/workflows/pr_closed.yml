@@ -55,7 +55,6 @@ jobs:
             echo ALERT_CHANNEL=${{ secrets.ALERT_CHANNEL }} >> .env
             sudo docker-compose pull
             sudo docker-compose up -d
-            sudo docker-compose exec backend python3 manage.py migrate
 
   send_message:
     runs-on: ubuntu-latest
