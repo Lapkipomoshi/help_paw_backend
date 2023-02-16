@@ -55,50 +55,81 @@ class Pet(models.Model):
 
 
 class Shelter(models.Model):
+    is_approved = models.BooleanField('Приют проверен', default=False)
     owner = models.OneToOneField(
         User, on_delete=models.PROTECT, verbose_name='Владелец приюта',
         related_name='shelter'
+    )
+    legal_owner_name = models.CharField(
+        'ФИО владельца приюта', max_length=50,
+        help_text='Укажите ФИО юридического владельца приюта'
+    )
+    tin = models.CharField(
+        'ИНН', max_length=10, unique=True,
+        validators=[RegexValidator(regex=r'^\d{10}$')],
+        help_text='Укажите номер ИНН'
     )
     name = models.CharField(
         'Название', max_length=50, unique=True,
         help_text='Введите название приюта'
     )
     description = models.TextField(
-        'Описание приюта', help_text='Добавьте описание приюта'
+        'Описание', max_length=1000,
+        help_text='Добавьте описание приюта'
     )
     logo = models.ImageField(
-        'Логотип', null=True, blank=True, help_text='Загрузите логотип приюта'
+        'Логотип', null=True, blank=True,
+        help_text='Загрузите логотип приюта'
     )
     profile_image = models.ImageField(
         'Фото профиля', null=True, blank=True,
         help_text='Загрузите фото профиля'
     )
     address = models.TextField(
-        'Адрес', blank=True, help_text='Укажите адрес приюта'
+        'Адрес', blank=True, max_length=256,
+        help_text='Укажите адрес приюта'
+    )
+    long = models.DecimalField(
+        'Долгота', max_digits=13, decimal_places=10, blank=True, null=True
+    )
+    lat = models.DecimalField(
+        'Широта', max_digits=13, decimal_places=10, blank=True, null=True
     )
     phone_number = models.CharField(
-        'Телефон приюта', max_length=12, blank=True,
+        'Телефон приюта', max_length=12,
         validators=[RegexValidator(regex=r'^\+\d{11}$')],
         help_text='Укажите телефон приюта'
     )
+    working_from_hour = models.TimeField(
+        'Время начала работы',
+        help_text='Укажите время начала работы приюта'
+    )
+    working_to_hour = models.TimeField(
+        'Время окончания работы',
+        help_text='Укажите время окончания работы приюта'
+    )
     email = models.EmailField(
-        'Электронная почта', max_length=254, blank=True,
+        'Электронная почта', max_length=254, unique=True,
         help_text='Укажите почту для связи с приютом'
     )
     web_site = models.URLField(
         'Сайт', max_length=200, blank=True,
         help_text='Укажите сайт приюта'
     )
-    working_hours = models.CharField(
-        'Режим работы', max_length=13,
-        help_text='Укажите режим работы в формате "hh:mm - hh:mm"'
+    vk_page = models.URLField(
+        'Группа в ВК', max_length=200, blank=True,
+        validators=[RegexValidator(regex=r'^https://vk.com/')],
+        help_text='Укажимте адрес группы в ВК'
     )
-    is_approved = models.BooleanField('Приют проверен', default=False)
-    long = models.DecimalField(
-        'Долгота', max_digits=13, decimal_places=10, blank=True, null=True
+    ok_page = models.URLField(
+        'Группа в Однокласника', max_length=200, blank=True,
+        validators=[RegexValidator(regex=r'^https://ok.ru/')],
+        help_text='Укажите адрес группы в Однокласниках'
     )
-    lat = models.DecimalField(
-        'Широта', max_digits=13, decimal_places=10, blank=True, null=True
+    telegram = models.URLField(
+        'Телеграм канал', max_length=200, blank=True,
+        validators=[RegexValidator(regex=r'^https://t.me/')],
+        help_text='Укажите адрес телеграм канала'
     )
 
     objects = models.Manager()

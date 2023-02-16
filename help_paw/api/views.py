@@ -60,8 +60,8 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def get_queryset(self, *args, **kwargs):
         if self.action in ('list', 'on_main', ):
             return Shelter.approved.only(
-                'id', 'name', 'address', 'working_hours', 'logo',
-                'profile_image', 'long', 'lat'
+                'id', 'name', 'address', 'working_from_hour',
+                'working_to_hour', 'logo', 'profile_image', 'long', 'lat'
             )
         else:
             return Shelter.approved.all()
@@ -76,9 +76,13 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def on_main(self, request):
         """Список приютов для главной страницы"""
         queryset = self.get_queryset().order_by('?')
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        if request.query_params.get('limit'):
+            page = self.paginate_queryset(queryset)
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        else:
+            data = ShelterShortSerializer(queryset, many=True)
+            return Response(data.data, status=status.HTTP_200_OK)
 
     @staticmethod
     def get_coordinates(address: str) -> tuple[float, float]:
@@ -103,8 +107,6 @@ class ShelterViewSet(viewsets.ModelViewSet):
         else:
             long, lat = None, None
         shelter = serializer.save(owner=owner, long=long, lat=lat)
-        owner.status = 'shelter_owner'
-        owner.save()
         response = ShelterSerializer(shelter)
         headers = self.get_success_headers(response.data)
         return Response(
@@ -118,9 +120,3 @@ class ShelterViewSet(viewsets.ModelViewSet):
         else:
             long, lat = instance.long, instance.lat
         serializer.save(long=long, lat=lat, partial=True)
-
-    def perform_destroy(self, instance):
-        owner = instance.owner
-        owner.status = 'user'
-        owner.save()
-        instance.delete()
