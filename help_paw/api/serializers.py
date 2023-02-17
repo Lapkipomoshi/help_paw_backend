@@ -47,7 +47,7 @@ class NewsSerializer(serializers.ModelSerializer):
 class FAQSerializer(serializers.ModelSerializer):
     """Ответы на часто задаваемые вопросы"""
     class Meta:
-        fields = ('question', 'answer')
+        fields = ('id', 'question', 'answer')
         model = FAQ
 
 
@@ -65,7 +65,8 @@ class HelpArticleSerializer(serializers.ModelSerializer):
         if not value.isdigit():
             return value
         else:
-            raise ValidationError('Название не может содержать только цифры')
+            raise ValidationError(
+                'Название не может содержать только цифры')
 
 
 class HelpArticleShortSerializer(serializers.ModelSerializer):
@@ -113,19 +114,22 @@ class ShelterSerializer(serializers.ModelSerializer):
         if re.match('https://vk.com/', value):
             return value
         else:
-            raise ValidationError('Адрес должен начинаться с https://vk.com/')
+            raise ValidationError(
+                'Адрес должен начинаться с https://vk.com/')
 
     def validate_ok_page(self, value):
         if re.match('https://ok.ru/', value):
             return value
         else:
-            raise ValidationError('Адрес должен начинаться с https://ok.ru/')
+            raise ValidationError(
+                'Адрес должен начинаться с https://ok.ru/')
 
     def validate_telegram(self, value):
         if re.match('https://t.me/', value):
             return value
         else:
-            raise ValidationError('Адрес должен начинаться с https://t.me/')
+            raise ValidationError(
+                'Адрес должен начинаться с https://t.me/')
 
     def get_money_collected(self, obj):
         return 0
