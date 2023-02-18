@@ -29,6 +29,7 @@ class FAQViewSet(viewsets.ModelViewSet):
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     filter_backends = (SearchFilter,)
+    pagination_class = LimitOffsetPagination
 
 
 class HelpArticleViewSet(viewsets.ModelViewSet):
