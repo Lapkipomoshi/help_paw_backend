@@ -8,7 +8,8 @@ from rest_framework.response import Response
 
 from api.serializers import (FAQSerializer, HelpArticleSerializer,
                              HelpArticleShortSerializer, NewsSerializer,
-                             ShelterSerializer, ShelterShortSerializer)
+                             NewsShortSerializer, ShelterSerializer,
+                             ShelterShortSerializer)
 from info.models import FAQ, HelpArticle, News
 from shelters.models import Shelter
 
@@ -18,10 +19,25 @@ from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
 
 class NewsViewSet(viewsets.ModelViewSet):
     """Новости приютов"""
-    queryset = News.objects.all()
-    serializer_class = NewsSerializer
-    filter_backends = (SearchFilter,)
+    filter_backends = [DjangoFilterBackend, SearchFilter, ]
+    filterset_fields = ['shelter', 'on_main']
     search_fields = ('header',)
+    pagination_class = LimitOffsetPagination
+    permission_classes = [IsAdminModerOrReadOnly, ]
+
+    def get_queryset(self):
+        if self.action == 'list':
+            return News.objects.select_related('shelter').only(
+                'id', 'pub_date', 'profile_image', 'header', 'shelter__name'
+            )
+        else:
+            return News.objects.all()
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return NewsShortSerializer
+        else:
+            return NewsSerializer
 
 
 class FAQViewSet(viewsets.ModelViewSet):
