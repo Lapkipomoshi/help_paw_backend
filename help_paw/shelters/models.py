@@ -86,7 +86,7 @@ class Shelter(models.Model):
         help_text='Загрузите фото профиля'
     )
     address = models.TextField(
-        'Адрес', blank=True, max_length=256,
+        'Адрес', blank=True, max_length=100,
         help_text='Укажите адрес приюта'
     )
     long = models.DecimalField(

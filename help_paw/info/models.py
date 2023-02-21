@@ -9,7 +9,8 @@ class Article(models.Model):
         help_text='Введите заголовок новости, максимум 50 символов'
     )
     text = models.TextField(
-        'Текст новости', help_text='Введите текст поста'
+        'Текст новости', max_length=2000,
+        help_text='Введите текст новости'
     )
     pub_date = models.DateTimeField(
         'Дата публикации', auto_now_add=True
@@ -24,10 +25,12 @@ class Article(models.Model):
 
 class Vacancy(models.Model):
     position = models.CharField(
-        'Доложность', max_length=30, help_text='Введите название должности'
+        'Доложность', max_length=30,
+        help_text='Введите название должности'
     )
     description = models.TextField(
-        'Описание', help_text='Опишите подробности вакансии'
+        'Описание', max_length=500,
+        help_text='Опишите подробности вакансии'
     )
     pub_date = models.DateField('Дата публикации', auto_now_add=True)
     is_closed = models.BooleanField('Вакансия закрыта', default=False)

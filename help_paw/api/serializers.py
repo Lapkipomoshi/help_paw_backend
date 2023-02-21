@@ -1,14 +1,13 @@
 import re
 
 from django.contrib.auth import get_user_model
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework.exceptions import ValidationError
 
 from info.models import FAQ, HelpArticle, News
 from shelters.models import Shelter
-
 
 User = get_user_model()
 
@@ -34,13 +33,24 @@ class CustomUserSerializer(UserSerializer):
         read_only_fields = ('status',)
 
 
-class NewsSerializer(serializers.ModelSerializer):
-    """Новости приютов"""
+class NewsShortSerializer(serializers.ModelSerializer):
+    shelter = serializers.CharField(source='shelter.name', default=None)
+
     class Meta:
         fields = (
-            'header', 'text', 'pub_date', 'profile_image', 'image_1',
-            'image_2', 'image_3', 'shelter'
+            'id', 'header', 'pub_date', 'profile_image', 'shelter'
         )
+        model = News
+
+
+class NewsSerializer(serializers.ModelSerializer):
+    profile_image = Base64ImageField()
+    image_1 = Base64ImageField(required=False, allow_null=True)
+    image_2 = Base64ImageField(required=False, allow_null=True)
+    image_3 = Base64ImageField(required=False, allow_null=True)
+
+    class Meta:
+        fields = '__all__'
         model = News
 
 
@@ -111,25 +121,19 @@ class ShelterSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_vk_page(self, value):
-        if re.match('https://vk.com/', value):
-            return value
-        else:
-            raise ValidationError(
-                'Адрес должен начинаться с https://vk.com/')
+        if not re.match('https://vk.com/', value):
+            raise ValidationError('Адрес должен начинаться с https://vk.com/')
+        return value
 
     def validate_ok_page(self, value):
-        if re.match('https://ok.ru/', value):
-            return value
-        else:
-            raise ValidationError(
-                'Адрес должен начинаться с https://ok.ru/')
+        if not re.match('https://ok.ru/', value):
+            raise ValidationError('Адрес должен начинаться с https://ok.ru/')
+        return value
 
     def validate_telegram(self, value):
         if re.match('https://t.me/', value):
-            return value
-        else:
-            raise ValidationError(
-                'Адрес должен начинаться с https://t.me/')
+            raise ValidationError('Адрес должен начинаться с https://t.me/')
+        return value
 
     def get_money_collected(self, obj):
         return 0
