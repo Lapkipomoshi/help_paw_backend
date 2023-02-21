@@ -35,7 +35,7 @@ class CustomUserSerializer(UserSerializer):
 
 class NewsShortSerializer(serializers.ModelSerializer):
     shelter = serializers.CharField(source='shelter.name', default=None)
-    """Новости приютов"""
+
     class Meta:
         fields = (
             'id', 'header', 'pub_date', 'profile_image', 'shelter'
