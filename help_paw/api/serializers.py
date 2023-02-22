@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from info.models import FAQ, HelpArticle, News
-from shelters.models import Shelter
+from shelters.models import Pet, Shelter
 
 User = get_user_model()
 
@@ -122,17 +122,20 @@ class ShelterSerializer(serializers.ModelSerializer):
 
     def validate_vk_page(self, value):
         if not re.match('https://vk.com/', value):
-            raise ValidationError('Адрес должен начинаться с https://vk.com/')
+            raise ValidationError(
+                'Адрес должен начинаться с https://vk.com/')
         return value
 
     def validate_ok_page(self, value):
         if not re.match('https://ok.ru/', value):
-            raise ValidationError('Адрес должен начинаться с https://ok.ru/')
+            raise ValidationError(
+                'Адрес должен начинаться с https://ok.ru/')
         return value
 
     def validate_telegram(self, value):
         if re.match('https://t.me/', value):
-            raise ValidationError('Адрес должен начинаться с https://t.me/')
+            raise ValidationError(
+                'Адрес должен начинаться с https://t.me/')
         return value
 
     def get_money_collected(self, obj):
@@ -140,3 +143,12 @@ class ShelterSerializer(serializers.ModelSerializer):
 
     def get_animals_adopted(self, obj):
         return obj.pets.filter(is_adopted=True).count()
+
+
+class PetSerializer(serializers.ModelSerializer):
+    photo = Base64ImageField()
+
+    class Meta:
+        fields = ('id', 'name', 'animal_type', 'about',
+                  'shelter', 'photo', 'is_adopted')
+        model = Pet
