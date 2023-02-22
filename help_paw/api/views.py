@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from geopy.geocoders import Nominatim
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -8,17 +9,17 @@ from rest_framework.response import Response
 
 from api.serializers import (FAQSerializer, HelpArticleSerializer,
                              HelpArticleShortSerializer, NewsSerializer,
-                             NewsShortSerializer, ShelterSerializer,
-                             ShelterShortSerializer)
+                             NewsShortSerializer, PetSerializer,
+                             ShelterSerializer, ShelterShortSerializer)
 from info.models import FAQ, HelpArticle, News
-from shelters.models import Shelter
+from shelters.models import Pet, Shelter
 
 from .filters import SheltersFilter
 from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
 
 
 class NewsViewSet(viewsets.ModelViewSet):
-    """Новости приютов"""
+    """Новости приютов."""
     filter_backends = [DjangoFilterBackend, SearchFilter, ]
     filterset_fields = ['shelter', 'on_main']
     search_fields = ('header',)
@@ -41,15 +42,16 @@ class NewsViewSet(viewsets.ModelViewSet):
 
 
 class FAQViewSet(viewsets.ModelViewSet):
-    """Ответы на часто задаваемые вопросы"""
+    """Ответы на часто задаваемые вопросы."""
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     filter_backends = (SearchFilter,)
     pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminModerOrReadOnly,)
 
 
 class HelpArticleViewSet(viewsets.ModelViewSet):
-    """Полезные статьи"""
+    """Полезные статьи."""
     pagination_class = LimitOffsetPagination
     permission_classes = [IsAdminModerOrReadOnly, ]
 
@@ -67,7 +69,7 @@ class HelpArticleViewSet(viewsets.ModelViewSet):
 
 
 class ShelterViewSet(viewsets.ModelViewSet):
-    """Приюты"""
+    """Приюты."""
     filter_backends = [DjangoFilterBackend, SearchFilter, ]
     filterset_class = SheltersFilter
     search_fields = ('name', )
@@ -91,7 +93,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=('get', ), url_path='on-main')
     def on_main(self, request):
-        """Список приютов для главной страницы"""
+        """Список приютов для главной страницы."""
         queryset = self.get_queryset().order_by('?')
         if request.query_params.get('limit'):
             page = self.paginate_queryset(queryset)
@@ -103,7 +105,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def get_coordinates(address: str) -> tuple[float, float]:
-        """Получение координат адреса через GeoPy"""
+        """Получение координат адреса через GeoPy."""
         try:
             geolocator = Nominatim(user_agent='help_paw')
             location = geolocator.geocode(address)
@@ -137,3 +139,33 @@ class ShelterViewSet(viewsets.ModelViewSet):
         else:
             long, lat = instance.long, instance.lat
         serializer.save(long=long, lat=lat, partial=True)
+
+
+class PetViewSet(viewsets.ModelViewSet):
+    """Питомцы."""
+    queryset = Pet.objects.all()
+    serializer_class = PetSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter, )
+    search_fields = ('name', )
+    pagination_class = LimitOffsetPagination
+    permission_classes = (IsOwnerAdminOrReadOnly, )
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsOwnerAdminOrReadOnly]
+    )
+    def adopt(self, request, pk):
+        if request.method == 'POST':
+            pet = get_object_or_404(Pet, id=pk)
+            pet.is_adopted = True
+            pet.save()
+            serializer = PetSerializer(pet)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'DELETE':
+            pet = get_object_or_404(Pet, id=pk)
+            pet.is_adopted = False
+            pet.save()
+            serializer = PetSerializer(pet)
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
