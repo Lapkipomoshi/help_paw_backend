@@ -33,7 +33,7 @@ SECRET_KEY = os.getenv(
     'D_KEY', default='django-insecure-&unen+ahaflwyd0me5^tlgl@$c3enwp!hw)r!xy74-3yypt#nr')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -191,3 +191,10 @@ SWAGGER_SETTINGS = {
 
 ALERT_TOKEN = os.getenv('BOT')
 ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
+
+
+# local_settings.py DEBUG=True
+try:
+    from .local_settings import *
+except ImportError:
+    pass
