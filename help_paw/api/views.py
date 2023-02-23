@@ -146,17 +146,18 @@ class PetViewSet(viewsets.ModelViewSet):
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, )
+    filterset_fields = ('shelter', 'animal_type')
     search_fields = ('name', )
     pagination_class = LimitOffsetPagination
     permission_classes = (IsOwnerAdminOrReadOnly, )
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=['patch', 'delete'],
         permission_classes=[IsOwnerAdminOrReadOnly]
     )
     def adopt(self, request, pk):
-        if request.method == 'POST':
+        if request.method == 'PATCH':
             pet = get_object_or_404(Pet, id=pk)
             pet.is_adopted = True
             pet.save()
