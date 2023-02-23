@@ -149,6 +149,7 @@ class PetSerializer(serializers.ModelSerializer):
     photo = Base64ImageField()
     choices = Pet.ANIMAL_TYPE
     animal_type = serializers.ChoiceField(choices)
+    is_adopted = serializers.BooleanField(read_only=True)
 
     class Meta:
         fields = ('id', 'name', 'animal_type', 'about',
