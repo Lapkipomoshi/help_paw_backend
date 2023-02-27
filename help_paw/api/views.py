@@ -1,5 +1,5 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from geopy.geocoders import Nominatim
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -14,7 +14,7 @@ from api.serializers import (FAQSerializer, HelpArticleSerializer,
 from info.models import FAQ, HelpArticle, News
 from shelters.models import Pet, Shelter
 
-from .filters import SheltersFilter
+from .filters import PetFilter, SheltersFilter
 from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
 
 
@@ -146,27 +146,17 @@ class PetViewSet(viewsets.ModelViewSet):
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, )
-    filterset_fields = ('shelter', 'animal_type')
+    filterset_class = PetFilter
     search_fields = ('name', )
     pagination_class = LimitOffsetPagination
     permission_classes = (IsOwnerAdminOrReadOnly, )
 
-    @action(
-        detail=True,
-        methods=['patch', 'delete'],
-        permission_classes=[IsOwnerAdminOrReadOnly]
-    )
+    @action(detail=True, methods=('patch', ))
     def adopt(self, request, pk):
-        if request.method == 'PATCH':
-            pet = get_object_or_404(Pet, id=pk)
-            pet.is_adopted = True
-            pet.save()
-            serializer = PetSerializer(pet)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'DELETE':
-            pet = get_object_or_404(Pet, id=pk)
-            pet.is_adopted = False
-            pet.save()
-            serializer = PetSerializer(pet)
-            return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        """Изменяет булево значение поля is_adopted модели Pet
+        на противоположное."""
+        pet = get_object_or_404(Pet, id=pk)
+        pet.is_adopted = not pet.is_adopted
+        pet.save()
+        serializer = self.get_serializer(pet)
+        return Response(serializer.data, status=status.HTTP_200_OK)

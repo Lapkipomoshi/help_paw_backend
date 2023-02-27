@@ -1,6 +1,6 @@
-from django_filters.rest_framework import CharFilter, FilterSet
+from django_filters.rest_framework import CharFilter, FilterSet, NumberFilter
 
-from shelters.models import Shelter
+from shelters.models import Pet, Shelter
 
 
 class SheltersFilter(FilterSet):
@@ -22,3 +22,12 @@ class SheltersFilter(FilterSet):
             return queryset.filter(task__is_emergency=False)
         if value and value == 'green':
             return queryset.filter(task=None)
+
+
+class PetFilter(FilterSet):
+    shelter = NumberFilter(field_name='shelter')
+    animal_type = CharFilter(field_name='animal_type__slug')
+
+    class Meta:
+        model = Pet
+        fields = ('shelter', 'animal_type', )
