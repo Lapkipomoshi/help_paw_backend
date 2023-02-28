@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from info.models import FAQ, HelpArticle, News
-from shelters.models import Pet, Shelter
+from shelters.models import AnimalType, Pet, Shelter
 
 User = get_user_model()
 
@@ -23,12 +23,8 @@ class CustomUserSerializer(UserSerializer):
     class Meta:
         model = User
         fields = (
-            'email',
-            'id',
-            'username',
-            'subscription_pet',
-            'subscription_shelter',
-            'status',
+            'id', 'email', 'username', 'subscription_pet',
+            'subscription_shelter', 'status'
         )
         read_only_fields = ('status',)
 
@@ -37,9 +33,7 @@ class NewsShortSerializer(serializers.ModelSerializer):
     shelter = serializers.CharField(source='shelter.name', default=None)
 
     class Meta:
-        fields = (
-            'id', 'header', 'pub_date', 'profile_image', 'shelter'
-        )
+        fields = ('id', 'header', 'pub_date', 'profile_image', 'shelter')
         model = News
 
 
@@ -72,11 +66,9 @@ class HelpArticleSerializer(serializers.ModelSerializer):
         model = HelpArticle
 
     def validate_header(self, value):
-        if not value.isdigit():
-            return value
-        else:
-            raise ValidationError(
-                'Название не может содержать только цифры')
+        if value.isdigit():
+            raise ValidationError('Название не может содержать только цифры')
+        return value
 
 
 class HelpArticleShortSerializer(serializers.ModelSerializer):
@@ -98,45 +90,23 @@ class ShelterShortSerializer(serializers.ModelSerializer):
 
 
 class ShelterSerializer(serializers.ModelSerializer):
-    owner = serializers.IntegerField(source='owner.id', read_only=True)
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
     logo = Base64ImageField(required=False, allow_null=True)
     profile_image = Base64ImageField(required=False, allow_null=True)
+    animal_types = serializers.SlugRelatedField(
+        slug_field='slug', many=True, queryset=AnimalType.objects.all()
+    )
     money_collected = serializers.SerializerMethodField(read_only=True)
     animals_adopted = serializers.SerializerMethodField(read_only=True)
     working_from_hour = serializers.TimeField(format='%H:%M')
     working_to_hour = serializers.TimeField(format='%H:%M')
-    vk_page = serializers.URLField()
-    ok_page = serializers.URLField()
-    telegram = serializers.URLField()
+    vk_page = serializers.URLField(required=False)
+    ok_page = serializers.URLField(required=False)
+    telegram = serializers.URLField(required=False)
 
     class Meta:
         exclude = ('is_approved', )
         model = Shelter
-
-    def validate(self, attrs):
-        if Shelter.objects.filter(owner=self.context.get('user')).exists():
-            raise serializers.ValidationError(
-                'Пользователь может зарегистрировать только один приют'
-            )
-        return attrs
-
-    def validate_vk_page(self, value):
-        if not re.match('https://vk.com/', value):
-            raise ValidationError(
-                'Адрес должен начинаться с https://vk.com/')
-        return value
-
-    def validate_ok_page(self, value):
-        if not re.match('https://ok.ru/', value):
-            raise ValidationError(
-                'Адрес должен начинаться с https://ok.ru/')
-        return value
-
-    def validate_telegram(self, value):
-        if re.match('https://t.me/', value):
-            raise ValidationError(
-                'Адрес должен начинаться с https://t.me/')
-        return value
 
     def get_money_collected(self, obj):
         return 0
@@ -144,14 +114,38 @@ class ShelterSerializer(serializers.ModelSerializer):
     def get_animals_adopted(self, obj):
         return obj.pets.filter(is_adopted=True).count()
 
+    def validate_vk_page(self, value):
+        if not re.match('https://vk.com/', value):
+            raise ValidationError('Адрес должен начинаться с https://vk.com/')
+        return value
+
+    def validate_ok_page(self, value):
+        if not re.match('https://ok.ru/', value):
+            raise ValidationError('Адрес должен начинаться с https://ok.ru/')
+        return value
+
+    def validate_telegram(self, value):
+        if not re.match('https://t.me/', value):
+            raise ValidationError('Адрес должен начинаться с https://t.me/')
+        return value
+
+    def validate(self, attrs):
+        if Shelter.objects.filter(owner=self.context.get('user')).exists():
+            raise serializers.ValidationError(
+                'Пользователь может зарегистрировать только один приют')
+        return attrs
+
 
 class PetSerializer(serializers.ModelSerializer):
+    animal_type = serializers.SlugRelatedField(
+        slug_field='slug', queryset=AnimalType.objects.all()
+    )
     photo = Base64ImageField()
-    choices = Pet.ANIMAL_TYPE
-    animal_type = serializers.ChoiceField(choices)
     is_adopted = serializers.BooleanField(read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'animal_type', 'about',
-                  'shelter', 'photo', 'is_adopted')
+        fields = (
+            'id', 'name', 'animal_type', 'about', 'shelter', 'photo',
+            'is_adopted'
+        )
         model = Pet

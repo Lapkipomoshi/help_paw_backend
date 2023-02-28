@@ -12,24 +12,13 @@ class ApprovedSheltersManager(models.Manager):
 
 class Pet(models.Model):
     """Карточка животного"""
-    CAT = 'cat'
-    DOG = 'dog'
-    OTHER = 'other'
-
-    ANIMAL_TYPE = [
-        (CAT, 'Кошка'),
-        (DOG, 'Собака'),
-        (OTHER, 'Другое')
-    ]
     name = models.CharField(
         'Кличка животного',
         max_length=100
     )
-    animal_type = models.CharField(
-        'Тип животного',
-        choices=ANIMAL_TYPE,
-        default=OTHER,
-        max_length=10
+    animal_type = models.ForeignKey(
+        'AnimalType', related_name='pets', on_delete=models.PROTECT,
+        verbose_name='Вид животного'
     )
     about = models.TextField(
         'Описание животного',
@@ -51,7 +40,7 @@ class Pet(models.Model):
         verbose_name_plural = 'Питомцы'
 
     def __str__(self):
-        return f'{self.name} - {self. animal_type}'
+        return self.name
 
 
 class Shelter(models.Model):
@@ -76,6 +65,9 @@ class Shelter(models.Model):
     description = models.TextField(
         'Описание', max_length=1000,
         help_text='Добавьте описание приюта'
+    )
+    animal_types = models.ManyToManyField(
+        'AnimalType', related_name='shelters', verbose_name='Виды животных'
     )
     logo = models.ImageField(
         'Логотип', null=True, blank=True,
@@ -163,6 +155,18 @@ class Task(models.Model):
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
         ordering = ('-pub_date', )
+
+    def __str__(self):
+        return self.name
+
+
+class AnimalType(models.Model):
+    name = models.CharField('Вид животного', unique=True, max_length=15)
+    slug = models.SlugField('Слаг', unique=True, max_length=20)
+
+    class Meta:
+        verbose_name = 'Вид животного'
+        verbose_name_plural = 'Виды животных'
 
     def __str__(self):
         return self.name
