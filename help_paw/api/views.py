@@ -4,15 +4,14 @@ from geopy.geocoders import Nominatim
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
-from api.serializers import (FAQSerializer, HelpArticleSerializer,
+from api.serializers import (AnimalTypeSerializer, FAQSerializer, HelpArticleSerializer,
                              HelpArticleShortSerializer, NewsSerializer,
                              NewsShortSerializer, PetSerializer,
-                             ShelterSerializer, ShelterShortSerializer)
-from info.models import FAQ, HelpArticle, News
-from shelters.models import Pet, Shelter
+                             ShelterSerializer, ShelterShortSerializer, VacancySerializer)
+from info.models import FAQ, HelpArticle, News, Vacancy
+from shelters.models import AnimalType, Pet, Shelter
 
 from .filters import PetFilter, SheltersFilter
 from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
@@ -21,9 +20,8 @@ from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
 class NewsViewSet(viewsets.ModelViewSet):
     """Новости приютов."""
     filter_backends = [DjangoFilterBackend, SearchFilter, ]
-    filterset_fields = ['shelter', 'on_main']
+    filterset_fields = ('shelter', 'on_main',)
     search_fields = ('header',)
-    pagination_class = LimitOffsetPagination
     permission_classes = [IsAdminModerOrReadOnly, ]
 
     def get_queryset(self):
@@ -46,13 +44,11 @@ class FAQViewSet(viewsets.ModelViewSet):
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     filter_backends = (SearchFilter,)
-    pagination_class = LimitOffsetPagination
     permission_classes = (IsAdminModerOrReadOnly,)
 
 
 class HelpArticleViewSet(viewsets.ModelViewSet):
     """Полезные статьи."""
-    pagination_class = LimitOffsetPagination
     permission_classes = [IsAdminModerOrReadOnly, ]
 
     def get_queryset(self):
@@ -73,11 +69,10 @@ class ShelterViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, ]
     filterset_class = SheltersFilter
     search_fields = ('name', )
-    pagination_class = LimitOffsetPagination
     permission_classes = [IsOwnerAdminOrReadOnly, ]
 
     def get_queryset(self, *args, **kwargs):
-        if self.action in ('list', 'on_main', ):
+        if self.action in ('list', 'on_main',):
             return Shelter.approved.only(
                 'id', 'name', 'address', 'working_from_hour',
                 'working_to_hour', 'logo', 'profile_image', 'long', 'lat'
@@ -95,13 +90,13 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def on_main(self, request):
         """Список приютов для главной страницы."""
         queryset = self.get_queryset().order_by('?')
-        if request.query_params.get('limit'):
+        limit = request.query_params.get('limit', default='0')
+        if limit != '0' and limit.isdigit():
             page = self.paginate_queryset(queryset)
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        else:
-            data = ShelterShortSerializer(queryset, many=True)
-            return Response(data.data, status=status.HTTP_200_OK)
+        data = ShelterShortSerializer(queryset, many=True)
+        return Response(data.data)
 
     @staticmethod
     def get_coordinates(address: str) -> tuple[float, float]:
@@ -145,10 +140,9 @@ class PetViewSet(viewsets.ModelViewSet):
     """Питомцы."""
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter, )
+    filter_backends = (DjangoFilterBackend, SearchFilter,)
     filterset_class = PetFilter
     search_fields = ('name', )
-    pagination_class = LimitOffsetPagination
     permission_classes = (IsOwnerAdminOrReadOnly, )
 
     @action(detail=True, methods=('patch', ))
@@ -160,3 +154,17 @@ class PetViewSet(viewsets.ModelViewSet):
         pet.save()
         serializer = self.get_serializer(pet)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class VacancyViewSet(viewsets.ModelViewSet):
+    queryset = Vacancy.objects.filter(is_closed=False)
+    serializer_class = VacancySerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('shelter',)
+
+
+class AnimalTypeViewSet(viewsets.ModelViewSet):
+    queryset = AnimalType.objects.all()
+    serializer_class = AnimalTypeSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('shelters',)

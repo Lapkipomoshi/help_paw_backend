@@ -11,25 +11,34 @@ class ApprovedSheltersManager(models.Manager):
 
 
 class Pet(models.Model):
-    """Карточка животного"""
-    name = models.CharField(
-        'Кличка животного',
-        max_length=100
+    """Карточка животного."""
+    MALE = 'male'
+    FEMALE = 'female'
+    OTHER = 'other'
+    SEX_CHOICE = (
+        (MALE, 'самец'),
+        (FEMALE, 'самка'),
+        (OTHER, 'другое'),
     )
+    name = models.CharField('Кличка животного', max_length=100)
     animal_type = models.ForeignKey(
-        'AnimalType', related_name='pets', on_delete=models.PROTECT,
-        verbose_name='Вид животного'
+        'AnimalType',
+        verbose_name='Вид животного',
+        related_name='pets',
+        on_delete=models.PROTECT
     )
-    about = models.TextField(
-        'Описание животного',
-        help_text='Расскажите о животном'
+    sex = models.CharField(
+        'Пол жиотного',
+        max_length=6,
+        choices=SEX_CHOICE,
+        default=OTHER
     )
-    photo = models.ImageField(
-        'Фото животного',
-        upload_to='photo/%Y/%m/%d/'
-    )
+    birth_date = models.DateField(null=True, blank=True)
+    about = models.TextField('Описание животного', max_length=500)
+    photo = models.ImageField('Фото животного', upload_to='photo/%Y/%m/%d/')
     shelter = models.ForeignKey(
         'Shelter',
+        verbose_name='Приют',
         related_name='pets',
         on_delete=models.PROTECT
     )
@@ -44,84 +53,71 @@ class Pet(models.Model):
 
 
 class Shelter(models.Model):
+    """Карточка приюта."""
     is_approved = models.BooleanField('Приют проверен', default=False)
     owner = models.OneToOneField(
-        User, on_delete=models.PROTECT, verbose_name='Владелец приюта',
-        related_name='shelter'
+        User,
+        verbose_name='Владелец приюта',
+        related_name='shelter',
+        on_delete=models.PROTECT
     )
-    legal_owner_name = models.CharField(
-        'ФИО владельца приюта', max_length=50,
-        help_text='Укажите ФИО юридического владельца приюта'
-    )
+    legal_owner_name = models.CharField('ФИО владельца приюта', max_length=50)
     tin = models.CharField(
-        'ИНН', max_length=10, unique=True,
-        validators=[RegexValidator(regex=r'^\d{10}$')],
-        help_text='Укажите номер ИНН'
+        'ИНН',
+        unique=True,
+        max_length=10,
+        validators=[RegexValidator(regex=r'^\d{10}$')]
     )
-    name = models.CharField(
-        'Название', max_length=50, unique=True,
-        help_text='Введите название приюта'
-    )
-    description = models.TextField(
-        'Описание', max_length=1000,
-        help_text='Добавьте описание приюта'
-    )
+    name = models.CharField('Название приюта', unique=True, max_length=50)
+    description = models.TextField('Описание приюта', max_length=1000)
     animal_types = models.ManyToManyField(
-        'AnimalType', related_name='shelters', verbose_name='Виды животных'
+        'AnimalType',
+        verbose_name='Виды животных',
+        related_name='shelters'
     )
-    logo = models.ImageField(
-        'Логотип', null=True, blank=True,
-        help_text='Загрузите логотип приюта'
-    )
-    profile_image = models.ImageField(
-        'Фото профиля', null=True, blank=True,
-        help_text='Загрузите фото профиля'
-    )
-    address = models.TextField(
-        'Адрес', blank=True, max_length=100,
-        help_text='Укажите адрес приюта'
-    )
+    logo = models.ImageField('Логотип приюта', null=True, blank=True)
+    profile_image = models.ImageField('Фото профиля', null=True, blank=True)
+    address = models.TextField('Адрес приюта', max_length=100, blank=True)
     long = models.DecimalField(
-        'Долгота', max_digits=13, decimal_places=10, blank=True, null=True
+        'Долгота',
+        max_digits=13,
+        decimal_places=10,
+        null=True,
+        blank=True
     )
     lat = models.DecimalField(
-        'Широта', max_digits=13, decimal_places=10, blank=True, null=True
+        'Широта',
+        max_digits=13,
+        decimal_places=10,
+        null=True,
+        blank=True
     )
     phone_number = models.CharField(
-        'Телефон приюта', max_length=12,
-        validators=[RegexValidator(regex=r'^\+\d{11}$')],
-        help_text='Укажите телефон приюта'
+        'Телефон приюта',
+        max_length=12,
+        validators=[RegexValidator(regex=r'^\+\d{11}$')]
     )
-    working_from_hour = models.TimeField(
-        'Время начала работы',
-        help_text='Укажите время начала работы приюта'
-    )
-    working_to_hour = models.TimeField(
-        'Время окончания работы',
-        help_text='Укажите время окончания работы приюта'
-    )
-    email = models.EmailField(
-        'Электронная почта', max_length=254, unique=True,
-        help_text='Укажите почту для связи с приютом'
-    )
-    web_site = models.URLField(
-        'Сайт', max_length=200, blank=True,
-        help_text='Укажите сайт приюта'
-    )
+    working_from_hour = models.TimeField('Время начала работы')
+    working_to_hour = models.TimeField('Время окончания работы')
+    email = models.EmailField('Email приюта', unique=True, max_length=256)
+    web_site = models.URLField('Сайт', max_length=200, blank=True)
     vk_page = models.URLField(
-        'Группа в ВК', max_length=200, blank=True,
-        validators=[RegexValidator(regex=r'^https://vk.com/')],
-        help_text='Укажимте адрес группы в ВК'
+        'Группа в ВК',
+        max_length=200,
+        blank=True,
+        validators=[RegexValidator(regex=r'^https://vk.com/')]
     )
     ok_page = models.URLField(
-        'Группа в Однокласника', max_length=200, blank=True,
-        validators=[RegexValidator(regex=r'^https://ok.ru/')],
-        help_text='Укажите адрес группы в Однокласниках'
+        'Группа в Однокласниках',
+        max_length=200,
+        blank=True,
+        validators=[RegexValidator(regex=r'^https://ok.ru/')]
     )
     telegram = models.URLField(
-        'Телеграм канал', max_length=200, blank=True,
-        validators=[RegexValidator(regex=r'^https://t.me/')],
-        help_text='Укажите адрес телеграм канала'
+        'Телеграм канал',
+        max_length=200,
+        blank=True,
+        validators=[RegexValidator(regex=r'^https://t.me/')]
     )
 
     objects = models.Manager()
@@ -137,16 +133,13 @@ class Shelter(models.Model):
 
 class Task(models.Model):
     shelter = models.ForeignKey(
-        'Shelter', related_name='task', on_delete=models.CASCADE,
-        verbose_name='Приют'
+        'Shelter',
+        verbose_name='Приют',
+        related_name='task',
+        on_delete=models.CASCADE
     )
-    name = models.CharField(
-        'Краткое описание', max_length=50,
-        help_text='Напишите краткое описание задачи'
-    )
-    description = models.TextField(
-        'Описание задачи', help_text='Опишите подробности задачи'
-    )
+    name = models.CharField('Краткое описание задачи', max_length=50)
+    description = models.TextField('Описание задачи', max_length=500)
     pub_date = models.DateField('Дата публикации', auto_now_add=True)
     is_emergency = models.BooleanField('Срочная задача', default=False)
     is_finished = models.BooleanField('Задача завершена', default=False)
