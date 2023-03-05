@@ -6,7 +6,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from info.models import FAQ, HelpArticle, News
+from info.models import FAQ, HelpArticle, News, Vacancy
 from shelters.models import AnimalType, Pet, Shelter
 
 User = get_user_model()
@@ -140,12 +140,27 @@ class PetSerializer(serializers.ModelSerializer):
     animal_type = serializers.SlugRelatedField(
         slug_field='slug', queryset=AnimalType.objects.all()
     )
+    age = serializers.IntegerField(default=0)
     photo = Base64ImageField()
     is_adopted = serializers.BooleanField(read_only=True)
 
     class Meta:
         fields = (
-            'id', 'name', 'animal_type', 'about', 'shelter', 'photo',
-            'is_adopted'
+            'id', 'name', 'animal_type', 'sex', 'age', 'about', 'shelter',
+            'photo', 'is_adopted',
         )
         model = Pet
+
+
+class VacancySerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = (
+            'id', 'shelter', 'salary', 'schedule', 'position', 'description',
+        )
+        model = Vacancy
+
+
+class AnimalTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('id', 'name', 'slug',)
+        model = AnimalType
