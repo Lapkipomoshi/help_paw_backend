@@ -170,6 +170,7 @@ DJOSER = {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
         'user': 'api.serializers.CustomUserSerializer',
         'current_user': 'api.serializers.CustomUserSerializer',
+        # 'token_create': 'apps.accounts.serializers.CustomTokenCreateSerializer'
     },
 
     'PERMISSIONS': {
@@ -177,6 +178,8 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
     'HIDE_USERS': True,
+    'SEND_ACTIVATION_EMAIL': True,
+    'ACTIVATION_URL': 'activate/{uid}/{token}',
 }
 
 
@@ -193,6 +196,8 @@ SWAGGER_SETTINGS = {
 ALERT_TOKEN = os.getenv('BOT')
 ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+SITE_NAME = "Лапки помощи"
 
 # local_settings.py DEBUG=True
 try:
