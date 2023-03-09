@@ -24,6 +24,13 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    username = models.CharField(
+        unique=False,
+        max_length=150,
+        verbose_name='Имя пользователя',
+        help_text='Введите имя пользователя',
+    )
+
     status = models.CharField(
         verbose_name='Статус',
         help_text='Выберите статус пользователя',
