@@ -1,20 +1,30 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.compat import get_user_email
+from djoser.email import ActivationEmail
+from djoser.views import UserViewSet
 from geopy.geocoders import Nominatim
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 
-from api.serializers import (AnimalTypeSerializer, FAQSerializer, HelpArticleSerializer,
-                             HelpArticleShortSerializer, NewsSerializer,
-                             NewsShortSerializer, PetSerializer,
-                             ShelterSerializer, ShelterShortSerializer, VacancySerializer)
+from api.serializers import (AnimalTypeSerializer, CustomUserCreateSerializer,
+                             CustomUserSerializer, FAQSerializer,
+                             HelpArticleSerializer, HelpArticleShortSerializer,
+                             NewsSerializer, NewsShortSerializer,
+                             PetSerializer, ShelterSerializer,
+                             ShelterShortSerializer, VacancySerializer)
+from help_paw.settings import DJOSER
 from info.models import FAQ, HelpArticle, News, Vacancy
 from shelters.models import AnimalType, Pet, Shelter
 
 from .filters import PetFilter, SheltersFilter
 from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
+
+User = get_user_model()
 
 
 class NewsViewSet(viewsets.ModelViewSet):
@@ -168,3 +178,23 @@ class AnimalTypeViewSet(viewsets.ModelViewSet):
     serializer_class = AnimalTypeSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('shelters',)
+
+
+class CustomUserViewSet(UserViewSet):
+    queryset = User.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return CustomUserSerializer
+        return CustomUserCreateSerializer
+
+    def perform_update(self, serializer):
+        user = serializer.instance
+        new_email = serializer.validated_data.get('email')
+        if (DJOSER.get('SEND_ACTIVATION_EMAIL')
+                and user.email != new_email
+                and new_email is not None):
+            context = {"user": user}
+            to = [get_user_email(user)]
+            ActivationEmail(self.request, context).send(to)
+        serializer.save()
