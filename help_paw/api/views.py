@@ -8,11 +8,9 @@ from geopy.geocoders import Nominatim
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 
-from api.serializers import (AnimalTypeSerializer, CustomUserCreateSerializer,
-                             CustomUserSerializer, FAQSerializer,
+from api.serializers import (AnimalTypeSerializer, FAQSerializer,
                              HelpArticleSerializer, HelpArticleShortSerializer,
                              NewsSerializer, NewsShortSerializer,
                              PetSerializer, ShelterSerializer,
@@ -181,20 +179,11 @@ class AnimalTypeViewSet(viewsets.ModelViewSet):
 
 
 class CustomUserViewSet(UserViewSet):
-    queryset = User.objects.all()
-
-    def get_serializer_class(self):
-        if self.request.method in SAFE_METHODS:
-            return CustomUserSerializer
-        return CustomUserCreateSerializer
-
     def perform_update(self, serializer):
+        initial_email = serializer.instance.email
+        super().perform_update(serializer)
         user = serializer.instance
-        new_email = serializer.validated_data.get('email')
-        if (DJOSER.get('SEND_ACTIVATION_EMAIL')
-                and user.email != new_email
-                and new_email is not None):
+        if DJOSER.get('SEND_ACTIVATION_EMAIL') and user.email != initial_email:
             context = {"user": user}
             to = [get_user_email(user)]
             ActivationEmail(self.request, context).send(to)
-        serializer.save()
