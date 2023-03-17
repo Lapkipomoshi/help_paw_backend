@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from info.models import FAQ, HelpArticle, News, Vacancy, StaticInfo
+from info.models import FAQ, HelpArticle, News, StaticInfo, Vacancy
 
 admin.site.register(FAQ)
 admin.site.register(News)

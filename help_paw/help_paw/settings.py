@@ -33,7 +33,7 @@ SECRET_KEY = os.getenv(
     'D_KEY', default='django-insecure-&unen+ahaflwyd0me5^tlgl@$c3enwp!hw)r!xy74-3yypt#nr')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = (os.getenv('DEBUG', default=False) == 'True')
 
 ALLOWED_HOSTS = ['*']
 
@@ -170,6 +170,7 @@ DJOSER = {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
         'user': 'api.serializers.CustomUserSerializer',
         'current_user': 'api.serializers.CustomUserSerializer',
+        # 'token_create': 'apps.accounts.serializers.CustomTokenCreateSerializer'
     },
 
     'PERMISSIONS': {
@@ -177,6 +178,8 @@ DJOSER = {
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
     'HIDE_USERS': True,
+    'SEND_ACTIVATION_EMAIL': True,
+    'ACTIVATION_URL': '/activate/{uid}/{token}',
 }
 
 
@@ -193,6 +196,18 @@ SWAGGER_SETTINGS = {
 ALERT_TOKEN = os.getenv('BOT')
 ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
 
+EMAIL_BACKEND_TYPE = os.getenv('EMAIL_BACKEND_TYPE', default='console')
+EMAIL_BACKEND = f'django.core.mail.backend.{EMAIL_BACKEND_TYPE}.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'True'
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
+SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+SITE_NAME = "Лапки помощи"
 
 # local_settings.py DEBUG=True
 try:

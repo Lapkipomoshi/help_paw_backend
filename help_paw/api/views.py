@@ -1,20 +1,28 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.compat import get_user_email
+from djoser.email import ActivationEmail
+from djoser.views import UserViewSet
 from geopy.geocoders import Nominatim
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
-from api.serializers import (AnimalTypeSerializer, FAQSerializer, HelpArticleSerializer,
-                             HelpArticleShortSerializer, NewsSerializer,
-                             NewsShortSerializer, PetSerializer,
-                             ShelterSerializer, ShelterShortSerializer, VacancySerializer)
+from api.serializers import (AnimalTypeSerializer, FAQSerializer,
+                             HelpArticleSerializer, HelpArticleShortSerializer,
+                             NewsSerializer, NewsShortSerializer,
+                             PetSerializer, ShelterSerializer,
+                             ShelterShortSerializer, VacancySerializer)
+from help_paw.settings import DJOSER
 from info.models import FAQ, HelpArticle, News, Vacancy
 from shelters.models import AnimalType, Pet, Shelter
 
 from .filters import PetFilter, SheltersFilter
 from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
+
+User = get_user_model()
 
 
 class NewsViewSet(viewsets.ModelViewSet):
@@ -168,3 +176,14 @@ class AnimalTypeViewSet(viewsets.ModelViewSet):
     serializer_class = AnimalTypeSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('shelters',)
+
+
+class CustomUserViewSet(UserViewSet):
+    def perform_update(self, serializer):
+        initial_email = serializer.instance.email
+        super().perform_update(serializer)
+        user = serializer.instance
+        if DJOSER.get('SEND_ACTIVATION_EMAIL') and user.email != initial_email:
+            context = {"user": user}
+            to = [get_user_email(user)]
+            ActivationEmail(self.request, context).send(to)
