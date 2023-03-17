@@ -53,6 +53,14 @@ jobs:
             echo LOCAL=${{ secrets.LOCAL }} >> .env
             echo BOT=${{ secrets.BOT }} >> .env
             echo ALERT_CHANNEL=${{ secrets.ALERT_CHANNEL }} >> .env
+            echo EMAIL_HOST=${{ secrets.EMAIL_HOST }} >> .env
+            echo EMAIL_PORT=${{ secrets.EMAIL_PORT }} >> .env
+            echo EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }} >> .env
+            echo EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }} >> .env
+            echo EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }} >> .env
+            echo EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }} >> .env
+            echo DEBUG=${{ secrets.DEBUG }} >> .env
+            echo EMAIL_BACKEND_TYPE=${{ secrets.EMAIL_BACKEND_TYPE }} >> .env
             sudo docker-compose pull
             sudo docker-compose up -d
 
