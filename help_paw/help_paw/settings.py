@@ -197,7 +197,7 @@ ALERT_TOKEN = os.getenv('BOT')
 ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
 
 EMAIL_BACKEND_TYPE = os.getenv('EMAIL_BACKEND_TYPE', default='console')
-EMAIL_BACKEND = f'django.core.mail.backend.{EMAIL_BACKEND_TYPE}.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backend.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
