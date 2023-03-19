@@ -95,7 +95,10 @@ class ShelterSerializer(serializers.ModelSerializer):
     logo = Base64ImageField(required=False, allow_null=True)
     profile_image = Base64ImageField(required=False, allow_null=True)
     animal_types = serializers.SlugRelatedField(
-        slug_field='slug', many=True, queryset=AnimalType.objects.all()
+        slug_field='slug',
+        many=True,
+        queryset=AnimalType.objects.all(),
+        allow_empty=False
     )
     money_collected = serializers.SerializerMethodField(read_only=True)
     animals_adopted = serializers.SerializerMethodField(read_only=True)

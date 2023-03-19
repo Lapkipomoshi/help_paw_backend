@@ -179,7 +179,9 @@ DJOSER = {
     },
     'HIDE_USERS': True,
     'SEND_ACTIVATION_EMAIL': True,
-    'ACTIVATION_URL': '/activate/{uid}/{token}',
+    'ACTIVATION_URL': 'activate/{uid}/{token}/',
+    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
+    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}/'
 }
 
 
@@ -199,7 +201,7 @@ ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
 EMAIL_BACKEND_TYPE = os.getenv('EMAIL_BACKEND_TYPE', default='console')
 EMAIL_BACKEND = f'django.core.mail.backends.{EMAIL_BACKEND_TYPE}.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', default=0))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'True'
