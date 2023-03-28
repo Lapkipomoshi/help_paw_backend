@@ -112,6 +112,13 @@ class ShelterSerializer(serializers.ModelSerializer):
     def get_animals_adopted(self, obj):
         return obj.pets.filter(is_adopted=True).count()
 
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if Shelter.objects.filter(owner=user).exists():
+            raise serializers.ValidationError(
+                'Пользователь может зарегистрировать только один приют')
+        return attrs
+
 
 class PetSerializer(serializers.ModelSerializer):
     animal_type = serializers.SlugRelatedField(
