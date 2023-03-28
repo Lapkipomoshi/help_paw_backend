@@ -4,7 +4,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.compat import get_user_email
 from djoser.email import ActivationEmail
 from djoser.views import UserViewSet
-from geopy.geocoders import Nominatim
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -106,42 +105,9 @@ class ShelterViewSet(viewsets.ModelViewSet):
         data = ShelterShortSerializer(queryset, many=True)
         return Response(data.data)
 
-    @staticmethod
-    def get_coordinates(address: str) -> tuple[float, float]:
-        """Получение координат адреса через GeoPy."""
-        try:
-            geolocator = Nominatim(user_agent='help_paw')
-            location = geolocator.geocode(address)
-            long, lat = location.longitude, location.latitude
-        except Exception:
-            long, lat = None, None
-        return long, lat
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            data=request.data, context={'user': self.request.user}
-        )
-        serializer.is_valid(raise_exception=True)
-        owner = self.request.user
-        address = serializer.validated_data.get('address')
-        if address:
-            long, lat = self.get_coordinates(address)
-        else:
-            long, lat = None, None
-        shelter = serializer.save(owner=owner, long=long, lat=lat)
-        response = ShelterSerializer(shelter)
-        headers = self.get_success_headers(response.data)
-        return Response(
-            response.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def perform_update(self, serializer):
-        instance = self.get_object()
-        address = serializer.validated_data.get('address')
-        if address:
-            long, lat = self.get_coordinates(address)
-        else:
-            long, lat = instance.long, instance.lat
-        serializer.save(long=long, lat=lat, partial=True)
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.save(owner=user)
 
 
 class PetViewSet(viewsets.ModelViewSet):
