@@ -19,7 +19,8 @@ from info.models import FAQ, HelpArticle, News, Vacancy
 from shelters.models import AnimalType, Pet, Shelter
 
 from .filters import PetFilter, SheltersFilter
-from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
+from .permissions import (IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly,
+                          IsShelterOwnerOrAdmin)
 
 User = get_user_model()
 
@@ -93,7 +94,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
         else:
             return ShelterSerializer
 
-    @action(detail=False, methods=('get', ), url_path='on-main')
+    @action(detail=False, methods=('get',), url_path='on-main')
     def on_main(self, request):
         """Список приютов для главной страницы."""
         queryset = self.get_queryset().order_by('?')
@@ -131,10 +132,32 @@ class PetViewSet(viewsets.ModelViewSet):
 
 
 class VacancyViewSet(viewsets.ModelViewSet):
-    queryset = Vacancy.objects.filter(is_closed=False)
     serializer_class = VacancySerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('shelter',)
+    permission_classes = (IsShelterOwnerOrAdmin,)
+
+    def get_queryset(self):
+        if self.action == 'own_vacancies':
+            return Vacancy.objects.filter(shelter=None, is_closed=False)
+        return Vacancy.objects.filter(is_closed=False)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_shelter_owner:
+            serializer.save(shelter=user.shelter)
+        serializer.save()
+
+    @action(detail=False, methods=('get',), url_path='own-vacancies')
+    def own_vacancies(self, request):
+        queryset = self.get_queryset()
+        limit = request.query_params.get('limit', default='0')
+        if limit != '0' and limit.isdigit():
+            page = self.paginate_queryset(queryset)
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        data = VacancySerializer(queryset, many=True)
+        return Response(data.data)
 
 
 class AnimalTypeViewSet(viewsets.ModelViewSet):
@@ -147,7 +170,7 @@ class AnimalTypeViewSet(viewsets.ModelViewSet):
 class CustomUserViewSet(UserViewSet):
     def perform_update(self, serializer):
         initial_email = serializer.instance.email
-        super().perform_update(serializer)
+        serializer.save(raise_exception=True)
         user = serializer.instance
         if DJOSER.get('SEND_ACTIVATION_EMAIL') and user.email != initial_email:
             context = {"user": user}

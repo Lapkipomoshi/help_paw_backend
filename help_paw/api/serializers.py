@@ -137,6 +137,8 @@ class PetSerializer(serializers.ModelSerializer):
 
 
 class VacancySerializer(serializers.ModelSerializer):
+    shelter = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         fields = (
             'id', 'shelter', 'salary', 'schedule', 'position', 'description',
