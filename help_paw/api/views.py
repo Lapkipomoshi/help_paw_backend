@@ -103,7 +103,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
             page = self.paginate_queryset(queryset)
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        data = ShelterShortSerializer(queryset, many=True)
+        data = self.get_serializer(queryset, many=True)
         return Response(data.data)
 
     def perform_create(self, serializer):
@@ -156,7 +156,7 @@ class VacancyViewSet(viewsets.ModelViewSet):
             page = self.paginate_queryset(queryset)
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        data = VacancySerializer(queryset, many=True)
+        data = self.get_serializer(queryset, many=True)
         return Response(data.data)
 
 
