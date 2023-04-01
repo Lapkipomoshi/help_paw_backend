@@ -1,8 +1,5 @@
-import re
-
 from django.contrib.auth import get_user_model
 from djoser.serializers import UserCreateSerializer, UserSerializer
-# from djoser.serializers import TokenCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -104,9 +101,6 @@ class ShelterSerializer(serializers.ModelSerializer):
     animals_adopted = serializers.SerializerMethodField(read_only=True)
     working_from_hour = serializers.TimeField(format='%H:%M')
     working_to_hour = serializers.TimeField(format='%H:%M')
-    vk_page = serializers.URLField(required=False)
-    ok_page = serializers.URLField(required=False)
-    telegram = serializers.URLField(required=False)
 
     class Meta:
         exclude = ('is_approved', )
@@ -118,23 +112,9 @@ class ShelterSerializer(serializers.ModelSerializer):
     def get_animals_adopted(self, obj):
         return obj.pets.filter(is_adopted=True).count()
 
-    def validate_vk_page(self, value):
-        if not re.match('https://vk.com/', value):
-            raise ValidationError('Адрес должен начинаться с https://vk.com/')
-        return value
-
-    def validate_ok_page(self, value):
-        if not re.match('https://ok.ru/', value):
-            raise ValidationError('Адрес должен начинаться с https://ok.ru/')
-        return value
-
-    def validate_telegram(self, value):
-        if not re.match('https://t.me/', value):
-            raise ValidationError('Адрес должен начинаться с https://t.me/')
-        return value
-
     def validate(self, attrs):
-        if Shelter.objects.filter(owner=self.context.get('user')).exists():
+        user = self.context['request'].user
+        if Shelter.objects.filter(owner=user).exists():
             raise serializers.ValidationError(
                 'Пользователь может зарегистрировать только один приют')
         return attrs
@@ -157,6 +137,8 @@ class PetSerializer(serializers.ModelSerializer):
 
 
 class VacancySerializer(serializers.ModelSerializer):
+    shelter = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         fields = (
             'id', 'shelter', 'salary', 'schedule', 'position', 'description',

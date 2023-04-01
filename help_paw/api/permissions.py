@@ -23,11 +23,22 @@ class IsAdminModerOrReadOnly(BasePermission):
             return True
         else:
             return (request.user.is_authenticated and
-                    (request.user.is_admin or
-                     request.user.is_moderator))
+                    (request.user.is_admin or request.user.is_moderator))
 
     def has_object_permission(self, request, view, obj):
         return (request.method in SAFE_METHODS or
                 request.user.is_authenticated and
-                request.user.is_admin or
-                request.user.is_moderator)
+                request.user.is_admin or request.user.is_moderator)
+
+
+class IsShelterOwnerOrAdmin(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        else:
+            return (request.user.is_authenticated and
+                    (request.user.is_shelter_owner or request.user.is_admin))
+
+    def has_object_permission(self, request, view, obj):
+        return (request.user.shelter == obj.shelter or
+                request.user.is_admin)

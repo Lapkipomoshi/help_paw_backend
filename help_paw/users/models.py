@@ -70,7 +70,7 @@ class User(AbstractUser):
 
     @property
     def is_shelter_owner(self):
-        return self.status == self.SHELTER_OWNER
+        return self.shelter
 
     @property
     def is_user(self):
