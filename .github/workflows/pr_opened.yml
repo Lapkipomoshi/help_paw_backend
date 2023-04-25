@@ -5,6 +5,7 @@ on:
     types: [opened]
     branches:
     - main
+    - dev
 
 jobs:
   send_message:
