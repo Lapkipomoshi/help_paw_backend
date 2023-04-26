@@ -59,7 +59,7 @@ jobs:
             echo EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }} >> .env
             echo EMAIL_USE_SSL=${{ secrets.EMAIL_USE_SSL }} >> .env
             echo EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }} >> .env
-            echo DEBUG=${{ secrets.DEBUG }} >> .env
+            echo DEBUG=${{ secrets.TEST_DEBUG }} >> .env
             echo EMAIL_BACKEND_TYPE=${{ secrets.EMAIL_BACKEND_TYPE }} >> .env
             sudo docker-compose pull
             sudo docker-compose up -d
