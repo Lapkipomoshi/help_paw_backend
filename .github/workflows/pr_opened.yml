@@ -16,4 +16,4 @@ jobs:
         with:
           to: ${{ secrets.ALERT_CHANNEL }}
           token: ${{ secrets.BOT }}
-          message: ${{ github.actor }} открыл ${{ github.event_name }} ветки ${{ github.head_ref }} в ${{ github.base_ref }}
+          message: BACKEND - ${{ github.actor }} открыл ${{ github.event_name }} ветки ${{ github.head_ref }} в ${{ github.base_ref }}
