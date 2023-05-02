@@ -61,6 +61,7 @@ jobs:
             echo EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }} >> .env
             echo DEBUG=${{ secrets.DEBUG }} >> .env
             echo EMAIL_BACKEND_TYPE=${{ secrets.EMAIL_BACKEND_TYPE }} >> .env
+            echo REACT_APP_SERVER_TYPE=${{ secrets.REACT_APP_SERVER_TYPE_PROD }} >> .env
             sudo docker-compose pull
             sudo docker-compose up -d
 
@@ -74,11 +75,11 @@ jobs:
         with:
           to: ${{ secrets.ALERT_CHANNEL }}
           token: ${{ secrets.BOT }}
-          message: ${{ github.event_name }} ветки ${{ github.head_ref }} успешно смержен в ${{ github.base_ref }}, test обновлен и перезапущен
+          message: BACKEND - ${{ github.event_name }} ветки ${{ github.head_ref }} успешно смержен в ${{ github.base_ref }}, LAPKIPOMOSHI.RU обновлен и перезапущен
       - name: send message merged
         if: github.event.pull_request.merged == false
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.ALERT_CHANNEL }}
           token: ${{ secrets.BOT }}
-          message: ${{ github.event_name }} ветки ${{ github.head_ref }} в ${{ github.base_ref }} закрыт без мержа, деплой не производился.
+          message: BACKEND - ${{ github.event_name }} ветки ${{ github.head_ref }} в ${{ github.base_ref }} закрыт без мержа, деплой не производился.
