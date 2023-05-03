@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'shelters.apps.SheltersConfig',
     'info.apps.InfoConfig',
     'api.apps.ApiConfig',
+    'chat.apps.ChatConfig',
     'django_cleanup.apps.CleanupConfig',
     'corsheaders'
 ]
@@ -183,7 +184,8 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': True,
     'ACTIVATION_URL': 'activate/{uid}/{token}/',
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
-    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}/'
+    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}/',
+    'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True
 }
 
 

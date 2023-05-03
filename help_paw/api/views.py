@@ -14,6 +14,8 @@ from api.serializers import (AnimalTypeSerializer, FAQSerializer,
                              NewsSerializer, NewsShortSerializer,
                              PetSerializer, ShelterSerializer,
                              ShelterShortSerializer, VacancySerializer)
+from chat.models import Chat
+from chat.serializers import ChatSerializer
 from help_paw.settings import DJOSER
 from info.models import FAQ, HelpArticle, News, Vacancy
 from shelters.models import AnimalType, Pet, Shelter
@@ -91,6 +93,8 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ('list', 'on_main', ):
             return ShelterShortSerializer
+        if self.action == 'start_chat':
+            return ChatSerializer
         else:
             return ShelterSerializer
 
@@ -105,6 +109,13 @@ class ShelterViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         data = self.get_serializer(queryset, many=True)
         return Response(data.data)
+
+    @action(detail=True, methods=('post',), url_path='start-chat')
+    def start_chat(self, request, pk):
+        shelter = get_object_or_404(Shelter, id=pk)
+        chat = Chat.objects.get_or_create(shelter=shelter, user=request.user)
+        serializer = self.get_serializer(chat[0])
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         user = self.request.user
