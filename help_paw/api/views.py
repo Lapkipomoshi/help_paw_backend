@@ -102,13 +102,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def on_main(self, request):
         """Список приютов для главной страницы."""
         queryset = self.get_queryset().order_by('?')
-        limit = request.query_params.get('limit', default='0')
-        if limit != '0' and limit.isdigit():
-            page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        data = self.get_serializer(queryset, many=True)
-        return Response(data.data)
+        return super().list(queryset)
 
     @action(detail=True, methods=('post',), url_path='start-chat')
     def start_chat(self, request, pk):
@@ -162,13 +156,7 @@ class VacancyViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=('get',), url_path='own-vacancies')
     def own_vacancies(self, request):
         queryset = self.get_queryset()
-        limit = request.query_params.get('limit', default='0')
-        if limit != '0' and limit.isdigit():
-            page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        data = self.get_serializer(queryset, many=True)
-        return Response(data.data)
+        return super().list(queryset)
 
 
 class AnimalTypeViewSet(viewsets.ModelViewSet):
