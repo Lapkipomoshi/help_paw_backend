@@ -13,7 +13,7 @@ User = get_user_model()
 class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
-        fields = ('email', 'username', 'password')
+        fields = ('email', 'username', 'password',)
 
 
 class CustomUserSerializer(UserSerializer):
@@ -22,16 +22,25 @@ class CustomUserSerializer(UserSerializer):
         model = User
         fields = (
             'id', 'email', 'username', 'subscription_pet',
-            'subscription_shelter', 'status'
+            'subscription_shelter', 'status',
         )
         read_only_fields = ('status',)
 
 
+class ShelterTestSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('id', 'name',)
+        model = Shelter
+
+
 class NewsShortSerializer(serializers.ModelSerializer):
-    shelter = serializers.CharField(source='shelter.name', default=None)
+    shelter = ShelterTestSerializer(read_only=True, default=None)
+    pub_date = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
 
     class Meta:
-        fields = ('id', 'header', 'pub_date', 'profile_image', 'shelter')
+        fields = (
+            'id', 'header', 'pub_date', 'profile_image', 'shelter',
+        )
         model = News
 
 
@@ -40,16 +49,21 @@ class NewsSerializer(serializers.ModelSerializer):
     image_1 = Base64ImageField(required=False, allow_null=True)
     image_2 = Base64ImageField(required=False, allow_null=True)
     image_3 = Base64ImageField(required=False, allow_null=True)
+    pub_date = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
+    shelter = ShelterTestSerializer(read_only=True, default=None)
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id', 'profile_image', 'image_1', 'image_2', 'image_3', 'header',
+            'text', 'pub_date', 'shelter',
+        )
         model = News
 
 
 class FAQSerializer(serializers.ModelSerializer):
     """Ответы на часто задаваемые вопросы"""
     class Meta:
-        fields = ('id', 'question', 'answer')
+        fields = ('id', 'question', 'answer',)
         model = FAQ
 
 
@@ -59,7 +73,7 @@ class HelpArticleSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = (
-            'id', 'header', 'text', 'pub_date', 'profile_image', 'source'
+            'id', 'header', 'text', 'pub_date', 'profile_image', 'source',
         )
         model = HelpArticle
 
@@ -71,7 +85,7 @@ class HelpArticleSerializer(serializers.ModelSerializer):
 
 class HelpArticleShortSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'header', 'profile_image')
+        fields = ('id', 'header', 'profile_image',)
         model = HelpArticle
 
 
@@ -82,7 +96,7 @@ class ShelterShortSerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
             'id', 'name', 'address', 'working_from_hour', 'working_to_hour',
-            'logo', 'profile_image', 'long', 'lat'
+            'logo', 'profile_image', 'long', 'lat',
         )
         model = Shelter
 
@@ -117,6 +131,9 @@ class ShelterSerializer(serializers.ModelSerializer):
         if Shelter.objects.filter(owner=user).exists():
             raise serializers.ValidationError(
                 'Пользователь может зарегистрировать только один приют')
+        if not user.is_user:
+            raise serializers.ValidationError(
+                'Администраторам и модераторам нельзя регистрировать приюты')
         return attrs
 
 

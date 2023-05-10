@@ -25,3 +25,17 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = ('id', 'shelter', 'user', 'messages')
+
+
+class ChatListSerializer(serializers.ModelSerializer):
+    shelter = serializers.CharField(source='shelter.name', read_only=True)
+    user = serializers.CharField(source='user.username', read_only=True)
+    unread_messages = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Chat
+        fields = ('id', 'shelter', 'user', 'unread_messages',)
+
+    def get_unread_messages(self, obj):
+        user = self.context.get('request').user
+        return obj.messages.filter(is_readed=False).exclude(author=user).count()
