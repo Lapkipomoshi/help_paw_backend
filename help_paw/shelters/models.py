@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 
@@ -126,6 +127,22 @@ class Shelter(models.Model):
     class Meta:
         verbose_name = 'Приют'
         verbose_name_plural = 'Приюты'
+
+    def clean(self):
+        if not self.owner.is_user:
+            raise ValidationError('only_users_can_add_shelter')
+
+    def save(self):
+        owner = self.owner
+        owner.status = User.SHELTER_OWNER
+        owner.save()
+        super().save()
+
+    def delete(self):
+        owner = self.owner
+        owner.status = User.USER
+        owner.save()
+        super().delete()
 
     def __str__(self):
         return self.name
