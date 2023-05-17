@@ -23,16 +23,18 @@ class ChatViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         if self.action == 'list':
             return ChatListSerializer
+        if self.action == 'send_message':
+            return MessageSerializer
         return ChatSerializer
 
     @action(detail=True, methods=('post',), url_path='send-message')
     def send_message(self, request, pk):
         author = request.user
         chat = get_object_or_404(Chat, id=pk)
-        serializer = MessageSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(author=author, chat=chat)
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 class MessageViewSet(mixins.UpdateModelMixin,
