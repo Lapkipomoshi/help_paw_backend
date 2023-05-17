@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from api.views import (AnimalTypeViewSet, CustomUserViewSet, FAQViewSet,
                        HelpArticleViewSet, NewsViewSet, PetViewSet,
                        ShelterViewSet, VacancyViewSet)
+from chat.views import ChatViewSet, MessageViewSet, ShelterChatViewSet
 
 app_name = 'api'
 
@@ -16,6 +17,9 @@ v1_router.register(r'help-articles', HelpArticleViewSet, basename='help_articles
 v1_router.register(r'pets', PetViewSet, basename='pets')
 v1_router.register(r'vacancies', VacancyViewSet, basename='vacancies')
 v1_router.register(r'animal-types', AnimalTypeViewSet, basename='animal_types')
+v1_router.register(r'chats', ChatViewSet, basename='chats')
+v1_router.register(r'my-shelter/chats', ShelterChatViewSet, basename='shelter_chats')
+v1_router.register(r'chats/(?P<chat_id>\d+)/messages', MessageViewSet, basename='messages')
 user_router.register(r'users', CustomUserViewSet, basename='users')
 
 urlpatterns = [

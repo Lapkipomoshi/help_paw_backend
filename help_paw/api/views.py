@@ -14,6 +14,8 @@ from api.serializers import (AnimalTypeSerializer, FAQSerializer,
                              NewsSerializer, NewsShortSerializer,
                              PetSerializer, ShelterSerializer,
                              ShelterShortSerializer, VacancySerializer)
+from chat.models import Chat
+from chat.serializers import ChatSerializer
 from help_paw.settings import DJOSER
 from info.models import FAQ, HelpArticle, News, Vacancy
 from shelters.models import AnimalType, Pet, Shelter
@@ -91,6 +93,8 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ('list', 'on_main', ):
             return ShelterShortSerializer
+        if self.action == 'start_chat':
+            return ChatSerializer
         else:
             return ShelterSerializer
 
@@ -98,13 +102,14 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def on_main(self, request):
         """Список приютов для главной страницы."""
         queryset = self.get_queryset().order_by('?')
-        limit = request.query_params.get('limit', default='0')
-        if limit != '0' and limit.isdigit():
-            page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        data = self.get_serializer(queryset, many=True)
-        return Response(data.data)
+        return super().list(queryset)
+
+    @action(detail=True, methods=('post',), url_path='start-chat')
+    def start_chat(self, request, pk):
+        shelter = get_object_or_404(Shelter, id=pk)
+        chat = Chat.objects.get_or_create(shelter=shelter, user=request.user)
+        serializer = self.get_serializer(chat[0])
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -151,13 +156,7 @@ class VacancyViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=('get',), url_path='own-vacancies')
     def own_vacancies(self, request):
         queryset = self.get_queryset()
-        limit = request.query_params.get('limit', default='0')
-        if limit != '0' and limit.isdigit():
-            page = self.paginate_queryset(queryset)
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        data = self.get_serializer(queryset, many=True)
-        return Response(data.data)
+        return super().list(queryset)
 
 
 class AnimalTypeViewSet(viewsets.ModelViewSet):
