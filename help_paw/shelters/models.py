@@ -132,11 +132,11 @@ class Shelter(models.Model):
         if not self.owner.is_user:
             raise ValidationError('only_users_can_add_shelter')
 
-    def save(self):
+    def save(self, *args, **kwargs):
         owner = self.owner
         owner.status = User.SHELTER_OWNER
         owner.save()
-        super().save()
+        super().save(*args, **kwargs)
 
     def delete(self):
         owner = self.owner
