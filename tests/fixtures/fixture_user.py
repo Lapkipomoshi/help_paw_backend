@@ -8,7 +8,6 @@ def new_user_data():
         'username': 'User',
         'password': 'User_12345',
         'is_active': False,
-
     }
 
 
@@ -69,3 +68,31 @@ def token_user(user):
     return {
         'access': str(token),
     }
+
+
+@pytest.fixture
+def token_admin(admin):
+    from rest_framework_simplejwt.tokens import AccessToken
+    token = AccessToken.for_user(admin)
+
+    return {
+        'access': str(token),
+    }
+
+
+@pytest.fixture
+def user_client(token_user):
+    from rest_framework.test import APIClient
+
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f'Bearer {token_user["access"]}')
+    return client
+
+
+@pytest.fixture
+def admin_client(token_admin):
+    from rest_framework.test import APIClient
+
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f'Bearer {token_admin["access"]}')
+    return client
