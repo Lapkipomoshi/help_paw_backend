@@ -1,8 +1,10 @@
 from pytest_factoryboy import register
-from .factories import (NewsFactory, HelpArticleFactory, FAQFactory,
-                        StaticInfoFactory, VacancyFactory, ShelterFactory,
-                        AnimalTypeFactory, PetFactory, UserFactory,
-                        TaskFactory)
+
+from tests.plugins.factories import (AnimalTypeFactory, ChatFactory,
+                                     FAQFactory, HelpArticleFactory,
+                                     MessageFactory, NewsFactory, PetFactory,
+                                     ShelterFactory, StaticInfoFactory,
+                                     TaskFactory, UserFactory, VacancyFactory)
 
 register(NewsFactory)
 register(HelpArticleFactory)
@@ -14,7 +16,9 @@ register(AnimalTypeFactory)
 register(PetFactory)
 register(UserFactory)
 register(TaskFactory)
+register(ChatFactory)
+register(MessageFactory)
 
 pytest_plugins = [
-    'tests.fixtures.fixture_user',
+    'tests.plugins.fixtures',
 ]

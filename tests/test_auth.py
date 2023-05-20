@@ -1,9 +1,10 @@
+import re
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core import mail
 from rest_framework import status
 from rest_framework.test import APIClient
-import re
 
 url_signup = '/api/auth/users/'
 url_activation = '/api/auth/users/activation/'
