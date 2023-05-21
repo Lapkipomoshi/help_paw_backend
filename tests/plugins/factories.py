@@ -17,7 +17,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         model = User
 
     username = fake.name()
-    email = fake.email()
+    email = factory.Sequence(lambda n: f'person{n}@helppaw.com')
     password = fake.password()
     status = 'user'
 
@@ -37,9 +37,9 @@ class ShelterFactory(factory.django.DjangoModelFactory):
     is_approved = True
     owner = factory.SubFactory(UserFactory)
     legal_owner_name = fake.name()
-    tin = fake.pyint(min_value=TIN_MIN_VAL,
-                     max_value=TIN_MAX_VAL)
-    name = fake.name()
+    tin = factory.Sequence(lambda n: n + fake.pyint(min_value=TIN_MIN_VAL,
+                                                    max_value=TIN_MAX_VAL))
+    name = factory.Sequence(lambda n: fake.word() + f' #{n}'.capitalize())
     description = fake.text()
     address = fake.address()
     phone_number = PHONE_NUM
@@ -125,6 +125,17 @@ class MessageFactory(factory.django.DjangoModelFactory):
     is_edited = False
 
 
+class UserPetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = UserPet
+
+    pet_subscriber = factory.SubFactory(UserFactory)
+    pet = factory.SubFactory(PetFactory)
+
+
 class UserShelterFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = UserShelter
+
+    shelter_subscriber = factory.SubFactory(UserFactory)
+    shelter = factory.SubFactory(ShelterFactory)

@@ -4,17 +4,9 @@ from django.core.exceptions import ValidationError
 from faker import Faker
 from shelters.models import Shelter
 
-from tests.plugins.factories import TIN_MAX_VAL, TIN_MIN_VAL
-
 pytestmark = pytest.mark.django_db(transaction=True)
 fake = Faker()
 User = get_user_model()
-
-
-# Тестирую:
-# 1. дандер метод __str__ моделей
-# 2. валидация полей моделей
-# 3. методы по работе с моделями
 
 
 class TestInfoModels:
@@ -67,42 +59,30 @@ class TestShelterModels:
 
         assert my_shelter.__str__() == 'test_name'
 
-    @pytest.mark.django_db(transaction=True)
-    def test_shelter_approved_queryset(self, shelter_factory, user_factory):
+    def test_shelter_approved_queryset(self, shelter_factory):
         """Тест кастомного менеджера модели ApprovedSheltersManager"""
-        shelter_factory.create(is_approved=False,
-                               name=fake.name(),
-                               owner=user_factory.create(
-                                   email=fake.email()),
-                               tin=fake.pyint(min_value=TIN_MIN_VAL,
-                                              max_value=TIN_MAX_VAL))
+        shelter_factory.create(is_approved=False)
         queryset = Shelter.approved.get_queryset()
 
         assert queryset.count() == 0
 
-        shelter_factory.create(owner=user_factory.create(email=fake.email()),
-                               name=fake.name(),
-                               tin=fake.pyint(min_value=TIN_MIN_VAL,
-                                              max_value=TIN_MAX_VAL))
+        shelter_factory.create()
         queryset = Shelter.approved.get_queryset()
 
         assert queryset.count() == 1
 
-    @pytest.mark.django_db(transaction=True)
     def test_shelter_tin_validation(self, shelter_factory):
         """Тест валидатора ИНН"""
         with pytest.raises(ValidationError):
             my_shelter = shelter_factory.build(tin='must_fail')
             my_shelter.clean_fields()
 
-    @pytest.mark.django_db(transaction=True)
     def test_shelter_phone_validation(self, shelter_factory):
         """Тест валидатора номера телефона"""
         with pytest.raises(ValidationError):
             my_shelter = shelter_factory.build(phone_number='must_fail')
             my_shelter.clean_fields()
 
-    @pytest.mark.django_db(transaction=True)
     def test_shelter_validation(self, shelter_factory, user_factory):
         """Тест валидатора модели, кастомный метод clean()."""
 
@@ -111,7 +91,6 @@ class TestShelterModels:
             my_shelter = shelter_factory.build(owner=must_fail)
             my_shelter.clean()
 
-    @pytest.mark.django_db(transaction=True)
     def test_shelter_delete(self, shelter_factory):
         """Тест удаления объекта, кастомный метод delete()."""
 
@@ -132,22 +111,17 @@ class TestChatModels:
     def test_chat_str_method(self, chat_factory, shelter_factory,
                              user_factory):
         my_shelter = shelter_factory.create(name='test_name')
-        my_user = user_factory.create(username='test_name',
-                                      email=fake.email())
+        my_user = user_factory.create(username='test_name')
         my_chat = chat_factory(shelter=my_shelter, user=my_user)
+
         assert my_chat.__str__() == 'test_name -> test_name'
 
-    def test_message_str_method(self, chat_factory, shelter_factory,
-                                message_factory, user_factory):
+    def test_message_str_method(self, message_factory):
         my_text = fake.text()
-        my_shelter = shelter_factory.create()
-        my_user = user_factory.create(email=fake.email())
-        my_chat = chat_factory(shelter=my_shelter, user=my_user)
-        my_message = message_factory(author=my_user, chat=my_chat,
-                                     text=my_text)
+        my_message = message_factory(text=my_text)
+
         assert my_message.__str__() == my_text[:20]
 
-    @pytest.mark.django_db(transaction=True)
     def test_chat_validation(self, chat_factory, shelter_factory):
         """Тест валидатора модели, кастомный метод clean()."""
         my_shelter = shelter_factory.create()
@@ -178,8 +152,23 @@ class TestUserModels:
         my_shelter_owner = user_factory.build(status='shelter_owner')
         assert my_shelter_owner.is_shelter_owner
 
-    def test_user_pet_str_method(self, user_factory):
-        pass
+    def test_user_pet_str_method(self, pet_factory, user_factory,
+                                 user_pet_factory):
+        my_pet = pet_factory(name='test_name')
+        my_pet_subscriber = user_factory(username='test_username')
+        my_user_pet = user_pet_factory(pet=my_pet,
+                                       pet_subscriber=my_pet_subscriber)
 
-    def test_user_shelter_str_method(self, user_factory):
-        pass
+        assert my_user_pet.__str__() == (
+            'test_username следит за судьбой: test_name')
+
+    def test_user_shelter_str_method(self, user_factory, shelter_factory,
+                                     user_shelter_factory):
+        my_shelter_subscriber = user_factory(username='test_username')
+        my_shelter = shelter_factory(name='test_name')
+
+        my_user_shelter = user_shelter_factory(
+            shelter_subscriber=my_shelter_subscriber, shelter=my_shelter)
+
+        assert my_user_shelter.__str__() == (
+            'test_username подписан на приют: test_name')

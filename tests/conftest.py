@@ -4,7 +4,8 @@ from tests.plugins.factories import (AnimalTypeFactory, ChatFactory,
                                      FAQFactory, HelpArticleFactory,
                                      MessageFactory, NewsFactory, PetFactory,
                                      ShelterFactory, StaticInfoFactory,
-                                     TaskFactory, UserFactory, VacancyFactory)
+                                     TaskFactory, UserFactory, VacancyFactory,
+                                     UserPetFactory, UserShelterFactory)
 
 register(NewsFactory)
 register(HelpArticleFactory)
@@ -18,6 +19,8 @@ register(UserFactory)
 register(TaskFactory)
 register(ChatFactory)
 register(MessageFactory)
+register(UserPetFactory)
+register(UserShelterFactory)
 
 pytest_plugins = [
     'tests.plugins.fixtures',
