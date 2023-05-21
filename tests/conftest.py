@@ -24,4 +24,5 @@ register(UserShelterFactory)
 
 pytest_plugins = [
     'tests.plugins.fixtures',
+    'tests.plugins.fixtures_for_endpoints',
 ]
