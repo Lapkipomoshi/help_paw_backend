@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 
@@ -128,21 +127,17 @@ class Shelter(models.Model):
         verbose_name = 'Приют'
         verbose_name_plural = 'Приюты'
 
-    def clean(self):
-        if not self.owner.is_user:
-            raise ValidationError('only_users_can_add_shelter')
-
     def save(self, *args, **kwargs):
         owner = self.owner
         owner.status = User.SHELTER_OWNER
         owner.save()
         super().save(*args, **kwargs)
 
-    def delete(self):
+    def delete(self, *args, **kwargs):
         owner = self.owner
         owner.status = User.USER
         owner.save()
-        super().delete()
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.name

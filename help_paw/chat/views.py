@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api.permissions import IsAuthor, IsShelterOwner
 from chat.models import Chat
-from chat.permissions import IsAuthor, IsShelterOwner
 from chat.serializers import (ChatListSerializer, ChatSerializer,
                               MessageSerializer)
 
@@ -52,7 +52,7 @@ class MessageViewSet(mixins.UpdateModelMixin,
         serializer.save(is_edited=True)
 
 
-class ShelterChatViewSet(ChatViewSet):
+class MyShelterChatViewSet(ChatViewSet):
     permission_classes = (IsAuthenticated and IsShelterOwner,)
 
     def get_queryset(self):
