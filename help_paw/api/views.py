@@ -11,13 +11,12 @@ from rest_framework.response import Response
 
 from api.serializers import (AnimalTypeSerializer, FAQSerializer,
                              HelpArticleSerializer, HelpArticleShortSerializer,
-                             NewsSerializer, NewsShortSerializer,
                              PetSerializer, ShelterSerializer,
                              ShelterShortSerializer, VacancySerializer)
 from chat.models import Chat
 from chat.serializers import ChatSerializer
 from help_paw.settings import DJOSER
-from info.models import FAQ, HelpArticle, News, Vacancy
+from info.models import FAQ, HelpArticle, Vacancy
 from shelters.models import AnimalType, Pet, Shelter
 
 from .filters import PetFilter, SheltersFilter
@@ -25,28 +24,6 @@ from .permissions import (IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly,
                           IsShelterOwnerOrAdmin)
 
 User = get_user_model()
-
-
-class NewsViewSet(viewsets.ModelViewSet):
-    """Новости приютов."""
-    filter_backends = [DjangoFilterBackend, SearchFilter, ]
-    filterset_fields = ('shelter', 'on_main',)
-    search_fields = ('header',)
-    permission_classes = [IsAdminModerOrReadOnly, ]
-
-    def get_queryset(self):
-        if self.action == 'list':
-            return News.objects.select_related('shelter').only(
-                'id', 'pub_date', 'profile_image', 'header', 'shelter__name'
-            )
-        else:
-            return News.objects.all()
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return NewsShortSerializer
-        else:
-            return NewsSerializer
 
 
 class FAQViewSet(viewsets.ModelViewSet):
@@ -160,6 +137,7 @@ class VacancyViewSet(viewsets.ModelViewSet):
 
 
 class AnimalTypeViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAdminModerOrReadOnly,)
     queryset = AnimalType.objects.all()
     serializer_class = AnimalTypeSerializer
     filter_backends = (DjangoFilterBackend,)
