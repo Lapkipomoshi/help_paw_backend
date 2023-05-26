@@ -1,4 +1,6 @@
 import pytest
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import AccessToken
 
 
 @pytest.fixture
@@ -8,7 +10,6 @@ def new_user_data():
         'username': 'User',
         'password': 'User_12345',
         'is_active': False,
-
     }
 
 
@@ -22,7 +23,7 @@ def superuser(django_user_model):
 
 
 @pytest.fixture
-def user(django_user_model):
+def defaultuser(django_user_model):
     return django_user_model.objects.create_user(
         username='User',
         email='user@helppaw.fake',
@@ -63,9 +64,57 @@ def shelter_owner(django_user_model):
 
 @pytest.fixture
 def token_user(user):
-    from rest_framework_simplejwt.tokens import AccessToken
     token = AccessToken.for_user(user)
-
     return {
         'access': str(token),
     }
+
+
+@pytest.fixture
+def token_admin(admin):
+    token = AccessToken.for_user(admin)
+    return {
+        'access': str(token),
+    }
+
+
+@pytest.fixture
+def user_client(token_user):
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f'Bearer {token_user["access"]}')
+    return client
+
+
+@pytest.fixture
+def api_client():
+    return APIClient()
+
+
+@pytest.fixture
+def admin_client(token_admin):
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f'Bearer {token_admin["access"]}')
+    return client
+
+
+# # from rest_framework.permissions import IsAuthenticated
+# from api.permissions import (IsOwnerAdminOrReadOnly, IsAdminModerOrReadOnly,
+#                              IsShelterOwnerOrAdmin)
+# from unittest import mock
+#
+#
+# @pytest.fixture(scope="session", autouse=True)
+# def mock_views_permissions():
+#     # little util I use for testing for DRY when patching multiple objects
+#     patch_perm = lambda perm: mock.patch.multiple(
+#         perm,
+#         has_permission=mock.Mock(return_value=True),
+#         has_object_permission=mock.Mock(return_value=True),
+#     )
+#     with (
+#         patch_perm(IsOwnerAdminOrReadOnly),
+#         patch_perm(IsAdminModerOrReadOnly),
+#         patch_perm(IsShelterOwnerOrAdmin),
+#         # ...add other permissions you may have below
+#     ):
+#         yield
