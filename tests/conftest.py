@@ -4,8 +4,8 @@ from tests.plugins.factories import (AnimalTypeFactory, ChatFactory,
                                      FAQFactory, HelpArticleFactory,
                                      MessageFactory, NewsFactory, PetFactory,
                                      ShelterFactory, StaticInfoFactory,
-                                     TaskFactory, UserFactory, VacancyFactory,
-                                     UserPetFactory, UserShelterFactory)
+                                     TaskFactory, UserFactory, UserPetFactory,
+                                     UserShelterFactory, VacancyFactory)
 
 register(NewsFactory)
 register(HelpArticleFactory)
