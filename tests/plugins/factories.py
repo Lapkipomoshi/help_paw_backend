@@ -85,6 +85,7 @@ class NewsFactory(factory.django.DjangoModelFactory):
 
     header = fake.words()
     shelter = factory.SubFactory(ShelterFactory)
+    on_main = True
 
 
 class HelpArticleFactory(factory.django.DjangoModelFactory):
