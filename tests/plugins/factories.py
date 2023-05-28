@@ -16,7 +16,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
 
-    username = fake.name()
+    username = factory.Sequence(lambda n: fake.name() + f' #{n}')
     email = factory.Sequence(lambda n: f'person{n}@helppaw.com')
     password = fake.password()
     status = 'user'
@@ -26,8 +26,8 @@ class AnimalTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = AnimalType
 
-    name = fake.name()
-    slug = fake.slug()
+    name = factory.Sequence(lambda n: fake.word().capitalize() + str(n))
+    slug = factory.Sequence(lambda n: fake.slug() + str(n))
 
 
 class ShelterFactory(factory.django.DjangoModelFactory):
@@ -46,6 +46,15 @@ class ShelterFactory(factory.django.DjangoModelFactory):
     working_from_hour = fake.time()
     working_to_hour = fake.time()
     email = factory.SelfAttribute('owner.email')
+
+    @factory.post_generation
+    def animal_types(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for animal_type in extracted:
+                self.animal_types.add(animal_type)
 
 
 class PetFactory(factory.django.DjangoModelFactory):
@@ -76,6 +85,7 @@ class NewsFactory(factory.django.DjangoModelFactory):
 
     header = fake.words()
     shelter = factory.SubFactory(ShelterFactory)
+    on_main = True
 
 
 class HelpArticleFactory(factory.django.DjangoModelFactory):
@@ -103,7 +113,12 @@ class VacancyFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Vacancy
 
+    shelter = factory.SubFactory(ShelterFactory)
     position = fake.word()
+    is_closed = False
+    salary = fake.word()
+    schedule = fake.word()
+    description = fake.sentence()
 
 
 class ChatFactory(factory.django.DjangoModelFactory):
@@ -137,5 +152,6 @@ class UserShelterFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = UserShelter
 
-    shelter_subscriber = factory.SubFactory(UserFactory)
+    shelter_subscriber = factory.SubFactory(UserFactory,
+                                            status='shelter_owner')
     shelter = factory.SubFactory(ShelterFactory)

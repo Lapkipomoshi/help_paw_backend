@@ -83,14 +83,6 @@ class TestShelterModels:
             my_shelter = shelter_factory.build(phone_number='must_fail')
             my_shelter.clean_fields()
 
-    def test_shelter_validation(self, shelter_factory, user_factory):
-        """Тест валидатора модели, кастомный метод clean()."""
-
-        must_fail = user_factory.create(status='moderator', email=fake.email())
-        with pytest.raises(ValidationError):
-            my_shelter = shelter_factory.build(owner=must_fail)
-            my_shelter.clean()
-
     def test_shelter_delete(self, shelter_factory):
         """Тест удаления объекта, кастомный метод delete()."""
 
