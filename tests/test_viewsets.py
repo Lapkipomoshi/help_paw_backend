@@ -3,16 +3,18 @@ import json
 import factory
 import pytest
 from api.serializers import (HelpArticleSerializer, HelpArticleShortSerializer,
-                             ShelterSerializer, ShelterShortSerializer,
-                             VacancySerializer)
+                             NewsSerializer, ShelterSerializer,
+                             ShelterShortSerializer, VacancySerializer, )
 from api.views import ShelterViewSet, VacancyViewSet
 from chat.models import Chat
 from chat.serializers import (ChatListSerializer, ChatSerializer,
                               MessageSerializer)
 from chat.views import MessageViewSet
 from faker import Faker
-from info.models import Vacancy
-from rest_framework.test import force_authenticate
+from info.models import News, Vacancy
+from info.views import NewsViewSet, MyShelterNewsViewSet
+from info.serializers import (NewsShortSerializer as info_NewsShortSerializer,
+                              NewsSerializer as info_NewsSerializer)
 from shelters.models import Pet, Shelter
 
 fake = Faker()
@@ -59,7 +61,7 @@ class TestChatViewSets:
         assert isinstance(response.data.serializer, ChatSerializer)
 
     def test_message_get_queryset(self, rf, api_client, user, chat_factory,
-                              message_factory):
+                                  message_factory):
         other_chat = chat_factory.create()
         message_factory.create(chat=other_chat)
 
@@ -107,7 +109,7 @@ class TestAPIViewSets:
     endpoint = '/api/v1/'
 
     def test_news_get_queryset(self, api_client, news_factory):
-        news_factory.create_batch(9)
+        news_factory.create_batch(9, on_main=False)
         my_news = news_factory.create()
 
         fields = ['id', 'pub_date', 'profile_image', 'header', 'shelter']
@@ -116,7 +118,7 @@ class TestAPIViewSets:
         response = api_client.get(self.endpoint + 'news/')
 
         assert response.status_code == 200
-        assert len(json.loads(response.content)) == 10
+        assert len(json.loads(response.content)) == 1
 
         response_json = response.json()
 
@@ -243,7 +245,7 @@ class TestAPIViewSets:
         my_shelter = Shelter.objects.create(**payload)
         owner_before = my_shelter.owner
 
-        data = {'animal_types': [v.slug for v in my_types]}
+        data = {'animal_types': [val.slug for val in my_types]}
         payload.update(data)
         payload.pop('owner')
 
@@ -307,18 +309,12 @@ class TestAPIViewSets:
             FACTORY_CLASS=vacancy_factory,
             shelter=None,
         )
-
         request = rf.post(
             url,
             content_type='application/json',
             data=json.dumps(payload),
         )
-
-        force_authenticate(request, user=user)
-
         request.user = user
-        view = VacancyViewSet()
-        view.request = request
 
         serializer = VacancySerializer(data=payload,
                                        context={'request': request})
@@ -330,3 +326,139 @@ class TestAPIViewSets:
 
         my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
         assert my_vac.shelter == shelter
+
+    def test_news_create(self, rf, news_factory, user):
+
+        url = self.endpoint + f'news/'
+
+        payload = factory.build(
+            dict,
+            FACTORY_CLASS=news_factory,
+            on_main=False,
+        )
+        payload['shelter'] = payload['shelter'].id
+        request = rf.post(
+            url,
+            content_type='application/json',
+            data=json.dumps(payload),
+        )
+
+        request.user = user
+        serializer = NewsSerializer(data=payload)
+
+        assert serializer.is_valid()
+
+        serializer.save()
+
+        view = NewsViewSet(request=request)
+        view.perform_create(serializer)
+
+        news = News.objects.all()
+
+        assert news.count() == 1 and news[0].on_main
+
+    @pytest.mark.parametrize('url, count',
+                             [('shelters/?warnings=red', 3),
+                              ('shelters/?warnings=yellow', 2),
+                              ('shelters/?warnings=green', 1)]
+                             )
+    def test_shelter_filters(self, url, count, task_factory, shelter_factory,
+                             api_client):
+        task_factory.create_batch(3, is_emergency=True)
+        task_factory.create_batch(2)
+        shelter_factory.create()
+
+        response = api_client.get(self.endpoint + url)
+
+        assert response.status_code == 200
+        assert len(json.loads(response.content)) == count
+
+
+class TestInfoViewSets:
+    endpoint = '/api/v1/'
+    fields = ['id', 'pub_date', 'profile_image', 'header', 'shelter']
+    extra_fields = ['image_1', 'image_2', 'image_3', 'text']
+
+    def test_shelter_news_get_queryset_get_serializer(self, api_client,
+                                                      shelter_factory,
+                                                      news_factory):
+        news_factory.create_batch(3)
+
+        my_shelter = shelter_factory.create()
+        my_news = news_factory.create(shelter=my_shelter)
+
+        response = api_client.get(
+            self.endpoint + f'shelters/{my_shelter.pk}/news/')
+
+        assert response.status_code == 200
+        assert len(json.loads(response.content)) == 1
+        assert isinstance(response.data.serializer.child,
+                          info_NewsShortSerializer)
+
+        response_json = response.json()
+
+        for field in self.fields:
+            assert field in response_json[0]
+
+        for field in self.extra_fields:
+            assert field not in response_json[0]
+
+        response = api_client.get(
+            self.endpoint + f'shelters/{my_shelter.pk}/news/{my_news.pk}/')
+
+        assert response.status_code == 200
+        assert isinstance(response.data.serializer, info_NewsSerializer)
+
+        response_json = response.json()
+
+        all_fields = self.fields + self.extra_fields
+        for field in all_fields:
+            assert field in response_json
+
+    def test_my_shelter_news_get_queryset_get_serializer(self, api_client,
+                                                         shelter_factory,
+                                                         news_factory):
+        news_factory.create_batch(3)
+
+        my_shelter = shelter_factory.create()
+
+        news_factory.create_batch(2, shelter=my_shelter)
+        api_client.force_authenticate(my_shelter.owner)
+
+        response = api_client.get(self.endpoint + 'my-shelter/news/')
+
+        assert response.status_code == 200
+        assert len(json.loads(response.content)) == 2
+        assert isinstance(response.data.serializer.child,
+                          info_NewsShortSerializer)
+
+    def test_my_news_create(self, rf, news_factory, shelter_factory):
+
+        shelter = shelter_factory.create()
+        user = shelter.owner
+
+        payload = factory.build(
+            dict,
+            FACTORY_CLASS=news_factory,
+            shelter=None,
+        )
+
+        request = rf.post(
+            self.endpoint,
+            content_type='application/json',
+            data=json.dumps(payload),
+        )
+
+        request.user = user
+        serializer = info_NewsSerializer(data=payload)
+
+        assert serializer.is_valid()
+
+        serializer.save()
+
+        view = MyShelterNewsViewSet(request=request)
+        view.perform_create(serializer)
+
+        news = News.objects.all()
+
+        assert news.count() == 1 and news[0].shelter == shelter

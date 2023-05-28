@@ -1,7 +1,12 @@
+import base64
+from io import BytesIO
+
 import factory
 from chat.models import Chat, Message
+from django.core.files.uploadedfile import SimpleUploadedFile
 from faker import Faker
 from info.models import FAQ, HelpArticle, News, StaticInfo, Vacancy
+from PIL import Image
 from shelters.models import AnimalType, Pet, Shelter, Task
 from users.models import User, UserPet, UserShelter
 
@@ -10,6 +15,35 @@ fake = Faker()
 TIN_MIN_VAL = 1000000000
 TIN_MAX_VAL = 9999999999
 PHONE_NUM = '+12345678910'
+
+
+def mock_image(file_name='example.jpg',
+               width=100,
+               height=100,
+               image_format='JPEG',
+               image_palette='RGB',
+               color='blue',
+               is_base64str=False):
+    thumb_io = BytesIO()
+    with Image.new(image_palette, (width, height), color) as thumb:
+        thumb.save(thumb_io, format=image_format, filename=file_name)
+    content = thumb_io.getvalue()
+
+    some_image = SimpleUploadedFile(
+        name=file_name,
+        content=content,
+        content_type="image/jpeg"
+    )
+    if is_base64str:
+        return base64.b64encode(some_image.read()).decode()
+    return some_image
+
+
+def mock_base64str():
+    thumb_io = BytesIO()
+    thumb_io.write(b'test')
+    content = thumb_io.getvalue()
+    return base64.b64encode(content).decode()
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -77,15 +111,21 @@ class TaskFactory(factory.django.DjangoModelFactory):
     shelter = factory.SubFactory(ShelterFactory)
     name = fake.name()
     description = fake.text()
+    is_emergency = False
+    is_finished = False
 
 
 class NewsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = News
 
-    header = fake.words()
+    header = fake.word()
+    text = fake.sentence()
     shelter = factory.SubFactory(ShelterFactory)
     on_main = True
+    # profile_image = factory.django.ImageField()
+    # profile_image = mock_image(is_base64str=True)
+    profile_image = ''  # mock_base64str()
 
 
 class HelpArticleFactory(factory.django.DjangoModelFactory):
@@ -93,6 +133,9 @@ class HelpArticleFactory(factory.django.DjangoModelFactory):
         model = HelpArticle
 
     header = fake.words()
+    text = fake.text()
+    source = fake.url()
+    profile_image = ''  # mock_base64str()
 
 
 class FAQFactory(factory.django.DjangoModelFactory):
