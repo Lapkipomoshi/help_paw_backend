@@ -218,12 +218,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 SITE_NAME = "Лапки помощи"
 
-# local_settings.py DEBUG=True
-try:
-    from .local_settings import *
-except ImportError:
-    pass
-
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
