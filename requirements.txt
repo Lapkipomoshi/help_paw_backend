@@ -23,4 +23,3 @@ django-cors-headers==3.14.0
 Faker==18.9.0
 pytest-factoryboy==2.5.1
 coverage==7.2.5
-
