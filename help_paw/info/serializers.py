@@ -2,7 +2,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from api.serializers import ShelterTestSerializer
-from info.models import News
+from info.models import News, Vacancy
 
 
 class NewsSerializer(serializers.ModelSerializer):
@@ -30,3 +30,14 @@ class NewsShortSerializer(serializers.ModelSerializer):
             'id', 'header', 'pub_date', 'profile_image', 'shelter',
         )
         model = News
+
+
+class VacancySerializer(serializers.ModelSerializer):
+    is_closed = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        fields = (
+            'id', 'salary', 'is_ndfl', 'education', 'schedule', 'position',
+            'description', 'pub_date', 'is_closed',
+        )
+        model = Vacancy

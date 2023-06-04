@@ -12,16 +12,15 @@ from rest_framework.response import Response
 from api.serializers import (AnimalTypeSerializer, FAQSerializer,
                              HelpArticleSerializer, HelpArticleShortSerializer,
                              PetSerializer, ShelterSerializer,
-                             ShelterShortSerializer, VacancySerializer)
+                             ShelterShortSerializer)
 from chat.models import Chat
 from chat.serializers import ChatSerializer
 from help_paw.settings import DJOSER
-from info.models import FAQ, HelpArticle, Vacancy
+from info.models import FAQ, HelpArticle
 from shelters.models import AnimalType, Pet, Shelter
 
 from .filters import PetFilter, SheltersFilter
-from .permissions import (IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly,
-                          IsShelterOwnerOrAdmin)
+from .permissions import IsAdminModerOrReadOnly, IsOwnerAdminOrReadOnly
 
 User = get_user_model()
 
@@ -111,29 +110,6 @@ class PetViewSet(viewsets.ModelViewSet):
         pet.save()
         serializer = self.get_serializer(pet)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class VacancyViewSet(viewsets.ModelViewSet):
-    serializer_class = VacancySerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('shelter',)
-    permission_classes = (IsShelterOwnerOrAdmin,)
-
-    def get_queryset(self):
-        if self.action == 'own_vacancies':
-            return Vacancy.objects.filter(shelter=None, is_closed=False)
-        return Vacancy.objects.filter(is_closed=False)
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        if user.is_shelter_owner:
-            serializer.save(shelter=user.shelter)
-        serializer.save()
-
-    @action(detail=False, methods=('get',), url_path='own-vacancies')
-    def own_vacancies(self, request):
-        queryset = self.get_queryset()
-        return super().list(queryset)
 
 
 class AnimalTypeViewSet(viewsets.ModelViewSet):

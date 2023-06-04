@@ -86,8 +86,19 @@ class Vacancy(models.Model):
         blank=True,
         default=None
     )
-    salary = models.CharField('Оплата', max_length=20)
-    schedule = models.CharField('Грфик работы', max_length=30)
+    salary = models.PositiveIntegerField('Оплата')
+    is_ndfl = models.BooleanField('НДФЛ', default=False)
+    education = models.ForeignKey(
+        'Education',
+        verbose_name='Образование',
+        related_name='vacancies',
+        on_delete=models.PROTECT
+    )
+    schedule = models.ManyToManyField(
+        'Schedule',
+        verbose_name='График работы',
+        related_name='vacancies'
+    )
     position = models.CharField('Доложность', max_length=30)
     description = models.TextField('Описание', max_length=500)
     pub_date = models.DateField('Дата публикации', auto_now_add=True)
@@ -100,3 +111,27 @@ class Vacancy(models.Model):
 
     def __str__(self):
         return self.position
+
+
+class Schedule(models.Model):
+    slug = models.SlugField(primary_key=True, max_length=25)
+    names = models.CharField(max_length=25)
+
+    class Meta:
+        verbose_name = 'График работы'
+        verbose_name_plural = 'Графики работы'
+
+    def __str__(self):
+        return self.names
+
+
+class Education(models.Model):
+    slug = models.SlugField(primary_key=True, max_length=25)
+    name = models.CharField(max_length=25)
+
+    class Meta:
+        verbose_name = 'Образование'
+        verbose_name_plural = 'Образование'
+
+    def __str__(self):
+        return self.name
