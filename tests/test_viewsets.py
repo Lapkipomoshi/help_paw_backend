@@ -4,17 +4,19 @@ import factory
 import pytest
 from api.serializers import (HelpArticleSerializer, HelpArticleShortSerializer,
                              NewsSerializer, ShelterSerializer,
-                             ShelterShortSerializer, VacancySerializer, )
-from api.views import ShelterViewSet, VacancyViewSet
+                             ShelterShortSerializer)
+from api.views import ShelterViewSet
 from chat.models import Chat
 from chat.serializers import (ChatListSerializer, ChatSerializer,
                               MessageSerializer)
 from chat.views import MessageViewSet
 from faker import Faker
 from info.models import News, Vacancy
-from info.views import NewsViewSet, MyShelterNewsViewSet
-from info.serializers import (NewsShortSerializer as info_NewsShortSerializer,
-                              NewsSerializer as info_NewsSerializer)
+from info.serializers import NewsSerializer as info_NewsSerializer
+from info.serializers import NewsShortSerializer as info_NewsShortSerializer
+from info.serializers import VacancySerializer
+from info.views import (MyShelterNewsViewSet, MyShelterVacancyViewSet,
+                        NewsViewSet)
 from shelters.models import Pet, Shelter
 
 fake = Faker()
@@ -285,48 +287,6 @@ class TestAPIViewSets:
 
         assert reread_pet.is_adopted
 
-    def test_vacancy_get_queryset(self, vacancy_factory, api_client):
-        vacancy_factory.create(shelter=None)
-        vacancy_factory.create(is_closed=True)
-        vacancy_factory.create()
-
-        response = api_client.get(self.endpoint + 'vacancies/')
-
-        assert response.status_code == 200
-        assert len(json.loads(response.content)) == 2
-
-        response = api_client.get(self.endpoint + 'vacancies/own-vacancies/')
-
-        assert response.status_code == 200
-        assert len(json.loads(response.content)) == 1
-
-    def test_vacancy_create(self, rf, user, vacancy_factory, shelter_factory):
-        shelter = shelter_factory.create(owner=user)
-
-        url = self.endpoint + f'vacancies/'
-        payload = factory.build(
-            dict,
-            FACTORY_CLASS=vacancy_factory,
-            shelter=None,
-        )
-        request = rf.post(
-            url,
-            content_type='application/json',
-            data=json.dumps(payload),
-        )
-        request.user = user
-
-        serializer = VacancySerializer(data=payload,
-                                       context={'request': request})
-        assert serializer.is_valid()
-        serializer.save()
-
-        view = VacancyViewSet(request=request)
-        view.perform_create(serializer)
-
-        my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
-        assert my_vac.shelter == shelter
-
     def test_news_create(self, rf, news_factory, user):
 
         url = self.endpoint + f'news/'
@@ -462,3 +422,87 @@ class TestInfoViewSets:
         news = News.objects.all()
 
         assert news.count() == 1 and news[0].shelter == shelter
+
+    def test_vacancy_get_queryset(self, vacancy_factory, api_client,
+                                  shelter_factory):
+        my_shelter = shelter_factory.create()
+
+        vacancy_factory.create()
+        vacancy_factory.create(is_closed=True)
+        vacancy_factory.create(shelter=None)
+        vacancy_factory.create(shelter=None, is_closed=True)
+        my_vacancy = vacancy_factory.create(shelter=my_shelter)
+        vacancy_factory.create(shelter=my_shelter, is_closed=True)
+
+        response = api_client.get(self.endpoint + 'vacancies/')
+
+        assert response.status_code == 200
+        assert len(json.loads(response.content)) == 1
+
+        response = api_client.get(
+            self.endpoint + f'shelters/{my_shelter.pk}/vacancies/')
+
+        assert response.status_code == 200
+        assert len(json.loads(response.content)) == 1
+        assert response.json()[0].get('id') == my_vacancy.pk
+
+    def test_vacancy_toggle_close(self, vacancy_factory, api_client, admin):
+
+        my_vacancy = vacancy_factory.create(is_closed=False)
+        api_client.force_authenticate(user=admin)
+        response = api_client.patch(
+            self.endpoint + f'vacancies/{my_vacancy.pk}/toggle-close/')
+
+        assert response.status_code == 204
+
+        vacancy = Vacancy.objects.get(pk=my_vacancy.pk)
+
+        assert vacancy.is_closed != my_vacancy.is_closed
+
+    def test_my_shelter_vacancy_get_queryset(self, vacancy_factory, api_client,
+                                             shelter_factory):
+
+        vacancy_factory.create_batch(3)
+        my_shelter = shelter_factory.create()
+        vacancy_factory.create(shelter=my_shelter)
+
+        api_client.force_authenticate(user=my_shelter.owner)
+        response = api_client.get(self.endpoint + 'my-shelter/vacancies/')
+
+        assert response.status_code == 200
+        assert len(json.loads(response.content)) == 1
+
+    def test_my_shelter_vacancy_vacancy_create(self, rf, user, vacancy_factory,
+                                               shelter_factory,
+                                               education_factory,
+                                               schedule_factory):
+        shelter = shelter_factory.create(owner=user)
+        education = education_factory.create()
+        schedules = schedule_factory.create_batch(3)
+
+        url = self.endpoint + f'my-shelter/vacancies/'
+        payload = factory.build(
+            dict,
+            FACTORY_CLASS=vacancy_factory,
+            shelter=None,
+            education=education.slug,
+            schedule=[val.slug for val in schedules]
+        )
+
+        request = rf.post(
+            url,
+            content_type='application/json',
+            data=json.dumps(payload),
+        )
+        request.user = user
+
+        serializer = VacancySerializer(data=payload,
+                                       context={'request': request})
+        assert serializer.is_valid()
+        serializer.save()
+
+        view = MyShelterVacancyViewSet(request=request)
+        view.perform_create(serializer)
+
+        my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
+        assert my_vac.shelter == shelter

@@ -1,10 +1,9 @@
-import factory
 import json
-import pytest
 
+import factory
+import pytest
 from api.serializers import HelpArticleSerializer, ShelterSerializer
 from faker import Faker
-from django.core.exceptions import ValidationError
 
 fake = Faker()
 pytestmark = pytest.mark.django_db(transaction=True)

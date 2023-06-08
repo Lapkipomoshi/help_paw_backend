@@ -1,5 +1,4 @@
 import pytest
-
 from info.models import Article
 
 
