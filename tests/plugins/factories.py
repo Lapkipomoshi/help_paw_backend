@@ -5,7 +5,8 @@ import factory
 from chat.models import Chat, Message
 from django.core.files.uploadedfile import SimpleUploadedFile
 from faker import Faker
-from info.models import FAQ, HelpArticle, News, StaticInfo, Vacancy
+from info.models import (FAQ, Education, HelpArticle, News, Schedule,
+                         StaticInfo, Vacancy)
 from PIL import Image
 from shelters.models import AnimalType, Pet, Shelter, Task
 from users.models import User, UserPet, UserShelter
@@ -82,7 +83,7 @@ class ShelterFactory(factory.django.DjangoModelFactory):
     email = factory.SelfAttribute('owner.email')
 
     @factory.post_generation
-    def animal_types(self, create, extracted, **kwargs):
+    def animal_types(self, create, extracted):
         if not create:
             return
 
@@ -123,9 +124,7 @@ class NewsFactory(factory.django.DjangoModelFactory):
     text = fake.sentence()
     shelter = factory.SubFactory(ShelterFactory)
     on_main = True
-    # profile_image = factory.django.ImageField()
-    # profile_image = mock_image(is_base64str=True)
-    profile_image = ''  # mock_base64str()
+    profile_image = ''
 
 
 class HelpArticleFactory(factory.django.DjangoModelFactory):
@@ -135,7 +134,7 @@ class HelpArticleFactory(factory.django.DjangoModelFactory):
     header = fake.words()
     text = fake.text()
     source = fake.url()
-    profile_image = ''  # mock_base64str()
+    profile_image = ''
 
 
 class FAQFactory(factory.django.DjangoModelFactory):
@@ -143,6 +142,7 @@ class FAQFactory(factory.django.DjangoModelFactory):
         model = FAQ
 
     question = fake.sentence()
+    answer = fake.sentence()
 
 
 class StaticInfoFactory(factory.django.DjangoModelFactory):
@@ -152,16 +152,40 @@ class StaticInfoFactory(factory.django.DjangoModelFactory):
     about_us = fake.sentence()
 
 
+class ScheduleFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Schedule
+
+    names = factory.Sequence(lambda n: "Schedule #%s" % n)
+    slug = factory.Sequence(lambda n: fake.slug() + str(n))
+
+
+class EducationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Education
+
+    name = factory.Sequence(lambda n: "Education #%s" % n)
+    slug = factory.Sequence(lambda n: fake.slug() + str(n))
+
+
 class VacancyFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Vacancy
 
     shelter = factory.SubFactory(ShelterFactory)
+    salary = fake.pyint()
+    education = factory.SubFactory(EducationFactory)
     position = fake.word()
-    is_closed = False
-    salary = fake.word()
-    schedule = fake.word()
     description = fake.sentence()
+
+    @factory.post_generation
+    def schedule(self, create, extracted):
+        if not create:
+            return
+
+        if extracted:
+            for schedule in extracted:
+                self.schedule.add(schedule)
 
 
 class ChatFactory(factory.django.DjangoModelFactory):

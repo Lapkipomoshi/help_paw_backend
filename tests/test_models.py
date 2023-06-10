@@ -36,6 +36,15 @@ class TestInfoModels:
 
         assert my_vacancy.__str__() == 'test_position'
 
+    def test_schedule_str_method(self, schedule_factory):
+        my_schedule = schedule_factory(names='test_schedule')
+
+        assert my_schedule.__str__() == 'test_schedule'
+
+    def test_education_str_method(self, education_factory):
+        my_education = education_factory(name='test_education')
+
+        assert my_education.__str__() == 'test_education'
 
 class TestShelterModels:
 
