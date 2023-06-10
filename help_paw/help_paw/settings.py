@@ -176,21 +176,22 @@ DJOSER = {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
         'user': 'api.serializers.CustomUserSerializer',
         'current_user': 'api.serializers.CustomUserSerializer',
-        # 'token_create': 'apps.accounts.serializers.CustomTokenCreateSerializer'
+        'username_reset_confirm': 'api.serializers.EmailResetConfirmSerializer'
     },
 
     'PERMISSIONS': {
         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+        'username_reset': ['rest_framework.permissions.IsAuthenticated'],
     },
     'HIDE_USERS': True,
     'SEND_ACTIVATION_EMAIL': True,
     'ACTIVATION_URL': 'activate/{uid}/{token}/',
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}/',
-    'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True
+    'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True,
+    'USERNAME_RESET_CONFIRM_URL': 'email-reset/{uid}/{token}/'
 }
-
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),

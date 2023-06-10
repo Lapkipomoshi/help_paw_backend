@@ -1,13 +1,31 @@
+import jwt
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import (UidAndTokenSerializer, UserCreateSerializer,
+                                UserSerializer)
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from info.models import FAQ, HelpArticle, News
 from shelters.models import AnimalType, Pet, Shelter
 
 User = get_user_model()
+
+
+class EmailResetConfirmSerializer(UidAndTokenSerializer):
+    new_email = serializers.SerializerMethodField()
+
+    def get_new_email(self, obj):
+        try:
+            decode = jwt.decode(
+                self.initial_data['new_email'],
+                settings.SECRET_KEY,
+                algorithms=['HS256']
+            )
+        except (jwt.ExpiredSignatureError, jwt.DecodeError):
+            raise serializers.ValidationError(
+                'Токен не валиден или время действия истекло')
+        return decode.get('email')
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -17,6 +35,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
+    email = serializers.EmailField(read_only=True)
 
     class Meta:
         model = User
@@ -79,7 +98,7 @@ class HelpArticleSerializer(serializers.ModelSerializer):
 
     def validate_header(self, value):
         if value.isdigit():
-            raise ValidationError('Название не может содержать только цифры')
+            raise serializers.ValidationError('Название не может содержать только цифры')
         return value
 
 
@@ -157,3 +176,7 @@ class AnimalTypeSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name', 'slug',)
         model = AnimalType
+
+
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)

@@ -1,21 +1,23 @@
+import datetime
+
+import jwt
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.compat import get_user_email
-from djoser.email import ActivationEmail
+from djoser.conf import settings as djoser_settings
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
-from api.serializers import (AnimalTypeSerializer, FAQSerializer,
-                             HelpArticleSerializer, HelpArticleShortSerializer,
-                             PetSerializer, ShelterSerializer,
-                             ShelterShortSerializer)
+from api.serializers import (AnimalTypeSerializer, EmailSerializer,
+                             FAQSerializer, HelpArticleSerializer,
+                             HelpArticleShortSerializer, PetSerializer,
+                             ShelterSerializer, ShelterShortSerializer)
 from chat.models import Chat
 from chat.serializers import ChatSerializer
-from help_paw.settings import DJOSER
 from info.models import FAQ, HelpArticle
 from shelters.models import AnimalType, Pet, Shelter
 
@@ -121,11 +123,32 @@ class AnimalTypeViewSet(viewsets.ModelViewSet):
 
 
 class CustomUserViewSet(UserViewSet):
+    def get_serializer_class(self):
+        if self.action == 'reset_username':
+            return EmailSerializer
+        return super().get_serializer_class()
+
     def perform_update(self, serializer):
-        initial_email = serializer.instance.email
         serializer.save(raise_exception=True)
-        user = serializer.instance
-        if DJOSER.get('SEND_ACTIVATION_EMAIL') and user.email != initial_email:
-            context = {"user": user}
-            to = [get_user_email(user)]
-            ActivationEmail(self.request, context).send(to)
+
+    @staticmethod
+    def create_reset_email_token(email):
+        exp = datetime.datetime.utcnow() + datetime.timedelta(days=2)
+        data = {'email': email, 'exp': exp}
+        token = jwt.encode(payload=data, key=settings.SECRET_KEY, algorithm='HS256')
+        return token
+
+    @action(["post"], detail=False, url_path="reset_{}".format(User.USERNAME_FIELD))
+    def reset_username(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        email = serializer.validated_data.get('email')
+        token = self.create_reset_email_token(email)
+
+        if user:
+            context = {'user': user, 'conf_token': token}
+            to = [email]
+            djoser_settings.EMAIL.username_reset(self.request, context).send(to)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
