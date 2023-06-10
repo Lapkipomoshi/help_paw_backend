@@ -35,7 +35,7 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (os.getenv('DEBUG', default='True') == 'True')
 
-ALLOWED_HOSTS = ['lapkipomoshi.ru', '*']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -192,7 +192,6 @@ DJOSER = {
     'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True,
     'USERNAME_RESET_CONFIRM_URL': 'email-reset/{uid}/{token}/'
 }
-EMAIL_RESET_CONFIRM_URL = 'api/auth/users/change-email-confirm/'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
