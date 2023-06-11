@@ -1,3 +1,5 @@
+import random
+
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -111,13 +113,17 @@ class HelpArticleShortSerializer(serializers.ModelSerializer):
 class ShelterShortSerializer(serializers.ModelSerializer):
     working_from_hour = serializers.TimeField(format='%H:%M')
     working_to_hour = serializers.TimeField(format='%H:%M')
+    warning = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = (
             'id', 'name', 'address', 'working_from_hour', 'working_to_hour',
-            'logo', 'profile_image', 'long', 'lat',
+            'logo', 'profile_image', 'long', 'lat', 'warning',
         )
         model = Shelter
+
+    def get_warning(self, obj):
+        return random.choice(['red', 'yellow', 'green'])
 
 
 class ShelterSerializer(serializers.ModelSerializer):
