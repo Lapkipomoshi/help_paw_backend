@@ -1,6 +1,11 @@
+from django.core.exceptions import ValidationError
 from django.db import models
-
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from shelters.models import Shelter
+
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
+MAX_IMAGE_CNT = 5
 
 
 class Article(models.Model):
@@ -8,6 +13,11 @@ class Article(models.Model):
     text = models.TextField('Текст новости', max_length=2000)
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     profile_image = models.ImageField('Основное изображение')
+    gallery = models.ManyToManyField('Image',
+                                     verbose_name='Галерея',
+                                     related_name='%(class)s_related',
+                                     related_query_name='%(class)s',
+                                     blank=True)
 
     class Meta:
         abstract = True
@@ -23,15 +33,12 @@ class News(Article):
         blank=True,
         default=None
     )
-    image_1 = models.ImageField('Фото 1', blank=True)
-    image_2 = models.ImageField('Фото 2', blank=True)
-    image_3 = models.ImageField('Фото 3', blank=True)
     on_main = models.BooleanField('Отображать на главной', default=False)
 
     class Meta:
         verbose_name = 'Новость'
         verbose_name_plural = 'Новости'
-        ordering = ('-pub_date', )
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.header[:10]
@@ -107,7 +114,7 @@ class Vacancy(models.Model):
     class Meta:
         verbose_name = 'Вакансия'
         verbose_name_plural = 'Вакансии'
-        ordering = ('-pub_date', )
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.position
@@ -135,3 +142,25 @@ class Education(models.Model):
 
     def __str__(self):
         return self.name
+
+
+def validate_image_size(value):
+    if value.size > MAX_IMAGE_SIZE:
+        raise ValidationError(
+            f'Размер изображения не должен превышать {MAX_IMAGE_SIZE} МБ')
+
+
+class Image(models.Model):
+    image = models.ImageField('Изображение', validators=[validate_image_size])
+
+    class Meta:
+        verbose_name = 'Изображение'
+        verbose_name_plural = 'Изображения'
+
+
+@receiver(m2m_changed, sender=News.gallery.through)
+def validate_gallery(sender, instance, action, *args, **kwargs):
+    if action == 'post_add' and instance.gallery.all().count() > MAX_IMAGE_CNT:
+        raise ValidationError(
+            f'Максимальное количество изображений в галерее - {MAX_IMAGE_CNT}'
+        )
