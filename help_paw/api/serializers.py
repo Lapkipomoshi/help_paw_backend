@@ -8,7 +8,7 @@ from djoser.serializers import (UidAndTokenSerializer, UserCreateSerializer,
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from info.models import FAQ, HelpArticle, News
+from info.models import FAQ
 from shelters.models import AnimalType, Pet, Shelter
 
 User = get_user_model()
@@ -54,60 +54,12 @@ class ShelterTestSerializer(serializers.ModelSerializer):
         model = Shelter
 
 
-class NewsShortSerializer(serializers.ModelSerializer):
-    shelter = ShelterTestSerializer(read_only=True, default=None)
-    pub_date = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
-
-    class Meta:
-        fields = (
-            'id', 'header', 'pub_date', 'profile_image', 'shelter',
-        )
-        model = News
-
-
-class NewsSerializer(serializers.ModelSerializer):
-    profile_image = Base64ImageField()
-    image_1 = Base64ImageField(required=False, allow_null=True)
-    image_2 = Base64ImageField(required=False, allow_null=True)
-    image_3 = Base64ImageField(required=False, allow_null=True)
-    pub_date = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
-    shelter = ShelterTestSerializer(read_only=True, default=None)
-
-    class Meta:
-        fields = (
-            'id', 'profile_image', 'image_1', 'image_2', 'image_3', 'header',
-            'text', 'pub_date', 'shelter',
-        )
-        model = News
-
-
 class FAQSerializer(serializers.ModelSerializer):
     """Ответы на часто задаваемые вопросы"""
+
     class Meta:
         fields = ('id', 'question', 'answer',)
         model = FAQ
-
-
-class HelpArticleSerializer(serializers.ModelSerializer):
-    profile_image = Base64ImageField(required=True)
-    header = serializers.CharField(max_length=50)
-
-    class Meta:
-        fields = (
-            'id', 'header', 'text', 'pub_date', 'profile_image', 'source',
-        )
-        model = HelpArticle
-
-    def validate_header(self, value):
-        if value.isdigit():
-            raise serializers.ValidationError('Название не может содержать только цифры')
-        return value
-
-
-class HelpArticleShortSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('id', 'header', 'profile_image',)
-        model = HelpArticle
 
 
 class ShelterShortSerializer(serializers.ModelSerializer):
@@ -142,7 +94,7 @@ class ShelterSerializer(serializers.ModelSerializer):
     working_to_hour = serializers.TimeField(format='%H:%M')
 
     class Meta:
-        exclude = ('is_approved', )
+        exclude = ('is_approved',)
         model = Shelter
 
     def get_money_collected(self, obj):
