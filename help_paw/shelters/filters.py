@@ -11,6 +11,7 @@ class SheltersFilter(FilterSet):
                    '"red", "yellow", "green"')
     )
     is_favourite = BooleanFilter(method='get_favourite')
+    is_helped = BooleanFilter(method='get_helped')
 
     class Meta:
         model = Shelter
@@ -27,6 +28,11 @@ class SheltersFilter(FilterSet):
     def get_favourite(self, queryset, name, value):
         if value:
             return queryset.filter(subscribers=self.request.user)
+        return queryset
+
+    def get_helped(self, queryset, name, value):
+        if value:
+            return queryset.order_by('?')[:3]
         return queryset
 
 

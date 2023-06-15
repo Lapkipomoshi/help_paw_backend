@@ -35,8 +35,8 @@ class CustomUserSerializer(UserSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'status',)
-        read_only_fields = ('status',)
+        fields = ('id', 'email', 'username', 'status', 'donations_sum',)
+        read_only_fields = ('status', 'donations_sum',)
 
 
 class EmailSerializer(serializers.Serializer):

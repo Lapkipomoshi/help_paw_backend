@@ -25,14 +25,14 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     username = models.CharField(
+        'Имя пользователя',
         unique=False,
         max_length=150,
-        verbose_name='Имя пользователя',
         help_text='Введите имя пользователя',
     )
 
     status = models.CharField(
-        verbose_name='Статус',
+        'Статус',
         help_text='Выберите статус пользователя',
         max_length=50,
         choices=ROLE_CHOICES,
@@ -54,10 +54,16 @@ class User(AbstractUser):
     )
 
     email = models.EmailField(
-        verbose_name='Адрес электронной почты',
+        'Адрес электронной почты',
         unique=True,
         max_length=254,
         null=False
+    )
+    donations_sum = models.DecimalField(
+        'Сумма пожертвований',
+        max_digits=8,
+        decimal_places=2,
+        default=0
     )
 
     @property

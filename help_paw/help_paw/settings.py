@@ -194,6 +194,9 @@ DJOSER = {
     'USERNAME_RESET_CONFIRM_URL': 'email-reset/{uid}/{token}/'
 }
 
+# 1 day
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),

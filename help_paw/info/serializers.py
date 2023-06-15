@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from info.models import (FAQ, MAX_IMAGE_CNT, MAX_IMAGE_SIZE, HelpArticle,
                          Image, News, Vacancy)
-from shelters.serializers import ShelterTestSerializer
+from shelters.serializers import ShelterNameSerializer
 
 
 class VacancySerializer(serializers.ModelSerializer):
@@ -102,7 +102,7 @@ class ArticleSerializer(serializers.ModelSerializer):
 
 
 class NewsSerializer(ArticleSerializer):
-    shelter = ShelterTestSerializer(read_only=True, default=None)
+    shelter = ShelterNameSerializer(read_only=True, default=None)
 
     class Meta:
         fields = (
@@ -113,7 +113,7 @@ class NewsSerializer(ArticleSerializer):
 
 
 class NewsShortSerializer(ArticleSerializer):
-    shelter = ShelterTestSerializer(read_only=True, default=None)
+    shelter = ShelterNameSerializer(read_only=True, default=None)
 
     class Meta:
         fields = (
