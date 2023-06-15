@@ -16,6 +16,3 @@ admin.site.register(HelpArticle)
 admin.site.register(Schedule)
 admin.site.register(Education)
 admin.site.register(Image)
-
-
-

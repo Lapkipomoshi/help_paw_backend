@@ -94,10 +94,6 @@ class UserPet(models.Model):
         'shelters.Pet',
         on_delete=models.CASCADE
     )
-    want_to_adopt = models.BooleanField(
-        verbose_name='Хочу приютить',
-        default=False
-    )
 
     def __str__(self):
         return f'{self.pet_subscriber} следит за судьбой: {self.pet}'
@@ -111,10 +107,6 @@ class UserShelter(models.Model):
     shelter = models.ForeignKey(
         'shelters.Shelter',
         on_delete=models.CASCADE
-    )
-    is_volunteer = models.BooleanField(
-        verbose_name='Я волонтер',
-        default=False
     )
 
     def __str__(self):

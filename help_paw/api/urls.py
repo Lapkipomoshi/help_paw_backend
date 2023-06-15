@@ -1,12 +1,12 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from api.views import (AnimalTypeViewSet, CustomUserViewSet, FAQViewSet,
-                       PetViewSet, ShelterViewSet)
+from api.views import CustomUserViewSet
 from chat.views import ChatViewSet, MessageViewSet, MyShelterChatViewSet
-from info.views import (MyShelterNewsViewSet, MyShelterVacancyViewSet,
-                        NewsViewSet, VacancyViewSet,
-                        HelpArticleViewSet)
+from info.views import (FAQViewSet, HelpArticleViewSet, MyShelterNewsViewSet,
+                        MyShelterVacancyViewSet, NewsViewSet, VacancyViewSet)
+from shelters.views import (AnimalTypeViewSet, MyShelterPetViewSet,
+                            MyShelterViewSet, PetViewSet, ShelterViewSet)
 
 app_name = 'api'
 
@@ -22,17 +22,21 @@ v1_router.register(r'shelters/(?P<shelter_id>\d+)/vacancies', VacancyViewSet,
                    basename='shelter_vacancies')
 v1_router.register(r'my-shelter/vacancies', MyShelterVacancyViewSet,
                    basename='my_shelter_vacancies')
-v1_router.register(r'faq', FAQViewSet, basename="faq")
+v1_router.register(r'faq', FAQViewSet, basename='faq')
 v1_router.register(r'shelters', ShelterViewSet, basename='shelters')
 v1_router.register(r'help-articles', HelpArticleViewSet,
                    basename='help_articles')
-v1_router.register(r'pets', PetViewSet, basename='pets')
+v1_router.register(r'shelters/(?P<shelter_id>\d+)/pets', PetViewSet,
+                   basename='pets')
+v1_router.register(r'my-shelter/pets', MyShelterPetViewSet,
+                   basename='my_shelter_pets')
 v1_router.register(r'animal-types', AnimalTypeViewSet, basename='animal_types')
 v1_router.register(r'chats', ChatViewSet, basename='chats')
 v1_router.register(r'my-shelter/chats', MyShelterChatViewSet,
                    basename='my_shelter_chats')
 v1_router.register(r'chats/(?P<chat_id>\d+)/messages', MessageViewSet,
                    basename='messages')
+v1_router.register(r'my-shelter', MyShelterViewSet, basename='my_shelter')
 user_router.register(r'users', CustomUserViewSet, basename='users')
 
 urlpatterns = [

@@ -1,9 +1,9 @@
-from api.serializers import ShelterTestSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from info.models import (MAX_IMAGE_CNT, MAX_IMAGE_SIZE, HelpArticle, Image,
-                         News, Vacancy)
+from info.models import (FAQ, MAX_IMAGE_CNT, MAX_IMAGE_SIZE, HelpArticle,
+                         Image, News, Vacancy)
+from shelters.serializers import ShelterTestSerializer
 
 
 class VacancySerializer(serializers.ModelSerializer):
@@ -135,3 +135,11 @@ class HelpArticleShortSerializer(ArticleSerializer):
     class Meta:
         fields = ('id', 'header', 'profile_image',)
         model = HelpArticle
+
+
+class FAQSerializer(serializers.ModelSerializer):
+    """Ответы на часто задаваемые вопросы"""
+
+    class Meta:
+        fields = ('id', 'question', 'answer',)
+        model = FAQ

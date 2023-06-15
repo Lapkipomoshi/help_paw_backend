@@ -1,4 +1,4 @@
-from django_filters.rest_framework import CharFilter, FilterSet, NumberFilter
+from django_filters.rest_framework import BooleanFilter, CharFilter, FilterSet
 
 from shelters.models import Pet, Shelter
 
@@ -10,24 +10,29 @@ class SheltersFilter(FilterSet):
         help_text=('Фильтрация приютов по наличию задач, возможные значения: '
                    '"red", "yellow", "green"')
     )
+    is_favourite = BooleanFilter(method='get_favourite')
 
     class Meta:
         model = Shelter
-        fields = ('warnings', )
+        fields = ('warnings', 'is_favourite')
 
     def get_by_colour(self, queryset, name, value):
         if value and value == 'red':
-            return queryset.filter(task__is_emergency=True)
+            return queryset
         if value and value == 'yellow':
-            return queryset.filter(task__is_emergency=False)
+            return queryset
         if value and value == 'green':
-            return queryset.filter(task=None)
+            return queryset
+
+    def get_favourite(self, queryset, name, value):
+        if value:
+            return queryset.filter(subscribers=self.request.user)
+        return queryset
 
 
 class PetFilter(FilterSet):
-    shelter = NumberFilter(field_name='shelter')
     animal_type = CharFilter(field_name='animal_type__slug')
 
     class Meta:
         model = Pet
-        fields = ('shelter', 'animal_type', )
+        fields = ('animal_type',)
