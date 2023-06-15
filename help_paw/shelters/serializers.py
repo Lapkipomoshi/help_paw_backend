@@ -6,7 +6,13 @@ from rest_framework import serializers
 from shelters.models import AnimalType, Pet, Shelter
 
 
-class ShelterTestSerializer(serializers.ModelSerializer):
+class AnimalTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name', 'slug',)
+        model = AnimalType
+
+
+class ShelterNameSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'name',)
         model = Shelter
@@ -90,9 +96,3 @@ class PetSerializer(serializers.ModelSerializer):
             'photo', 'is_adopted',
         )
         model = Pet
-
-
-class AnimalTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ('id', 'name', 'slug',)
-        model = AnimalType

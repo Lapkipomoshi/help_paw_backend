@@ -166,8 +166,8 @@ class Task(models.Model):
 
 
 class AnimalType(models.Model):
+    slug = models.SlugField('Слаг', primary_key=True, max_length=20)
     name = models.CharField('Вид животного', unique=True, max_length=15)
-    slug = models.SlugField('Слаг', unique=True, max_length=20)
 
     class Meta:
         verbose_name = 'Вид животного'
