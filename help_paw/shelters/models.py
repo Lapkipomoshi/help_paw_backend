@@ -40,7 +40,7 @@ class Pet(models.Model):
         'Shelter',
         verbose_name='Приют',
         related_name='pets',
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     is_adopted = models.BooleanField('Нашел дом', default=False)
 

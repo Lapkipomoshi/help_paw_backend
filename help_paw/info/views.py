@@ -1,15 +1,15 @@
-from api.permissions import IsAdminModerOrReadOnly, IsShelterOwner
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from shelters.models import Shelter
 
-from info.models import HelpArticle, News, Vacancy
-from info.serializers import (HelpArticleSerializer,
+from api.permissions import IsAdminModerOrReadOnly, IsShelterOwner
+from info.models import FAQ, HelpArticle, News, Vacancy
+from info.serializers import (FAQSerializer, HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
                               NewsShortSerializer, VacancySerializer)
+from shelters.models import Shelter
 
 
 class NewsViewSet(viewsets.ModelViewSet):
@@ -112,3 +112,10 @@ class HelpArticleViewSet(viewsets.ModelViewSet):
             if len(help_articles) == 1 and help_articles[0] == instance:
                 image.delete()
         instance.delete()
+
+
+class FAQViewSet(viewsets.ModelViewSet):
+    """Ответы на часто задаваемые вопросы."""
+    queryset = FAQ.objects.all()
+    serializer_class = FAQSerializer
+    permission_classes = (IsAdminModerOrReadOnly,)
