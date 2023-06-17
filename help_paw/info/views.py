@@ -12,10 +12,32 @@ from info.serializers import (FAQSerializer, HelpArticleSerializer,
 from shelters.models import Shelter
 
 
-class NewsViewSet(viewsets.ModelViewSet):
+class ArticleViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminModerOrReadOnly, ]
+
+    def perform_create(self, serializer):
+        if isinstance(self, NewsViewSet):
+            serializer.save(on_main=True)
+        else:
+            serializer.save()
+
+    def perform_destroy(self, instance):
+        for image in instance.gallery.all():
+            if isinstance(self, HelpArticleViewSet):
+                objects = image.helparticle_related.all()
+            elif isinstance(self, NewsViewSet):
+                objects = image.news_related.all()
+            else:
+                raise NotImplementedError('Неподдерживаемый вьюсет')
+
+            if len(objects) == 1 and objects[0] == instance:
+                image.delete()
+        instance.delete()
+
+
+class NewsViewSet(ArticleViewSet):
     """Новости приютов."""
     search_fields = ('header',)
-    permission_classes = [IsAdminModerOrReadOnly, ]
 
     def get_queryset(self):
         shelter_id = self.kwargs.get('shelter_id')
@@ -36,15 +58,20 @@ class NewsViewSet(viewsets.ModelViewSet):
         else:
             return NewsSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(on_main=True)
 
-    def perform_destroy(self, instance):
-        for image in instance.gallery.all():
-            news = image.news_related.all()
-            if len(news) == 1 and news[0] == instance:
-                image.delete()
-        instance.delete()
+class HelpArticleViewSet(ArticleViewSet):
+    """Полезные статьи."""
+    def get_queryset(self):
+        if self.action == 'list':
+            return HelpArticle.objects.only('id', 'header', 'profile_image')
+        else:
+            return HelpArticle.objects.all()
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return HelpArticleShortSerializer
+        else:
+            return HelpArticleSerializer
 
 
 class MyShelterNewsViewSet(NewsViewSet):
@@ -88,30 +115,6 @@ class MyShelterVacancyViewSet(VacancyViewSet):
     def perform_create(self, serializer):
         shelter = self.request.user.shelter
         serializer.save(shelter=shelter)
-
-
-class HelpArticleViewSet(viewsets.ModelViewSet):
-    """Полезные статьи."""
-    permission_classes = [IsAdminModerOrReadOnly, ]
-
-    def get_queryset(self):
-        if self.action == 'list':
-            return HelpArticle.objects.only('id', 'header', 'profile_image')
-        else:
-            return HelpArticle.objects.all()
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return HelpArticleShortSerializer
-        else:
-            return HelpArticleSerializer
-
-    def perform_destroy(self, instance):
-        for image in instance.gallery.all():
-            help_articles = image.helparticle_related.all()
-            if len(help_articles) == 1 and help_articles[0] == instance:
-                image.delete()
-        instance.delete()
 
 
 class FAQViewSet(viewsets.ModelViewSet):
