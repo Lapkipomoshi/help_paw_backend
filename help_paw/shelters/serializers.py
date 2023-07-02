@@ -32,8 +32,9 @@ class ShelterShortSerializer(serializers.ModelSerializer):
         )
         model = Shelter
 
+    # TODO Add logic when payment added
     def get_warning(self, obj):
-        return random.choice(['red', 'yellow', 'green'])
+        return 'yellow'
 
     def get_is_favourite(self, obj):
         user = self.context['request'].user
