@@ -5,7 +5,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api.permissions import IsAdminModerOrReadOnly, IsShelterOwner
+from api.permissions import IsAdminModerOrReadOnly, IsShelterOwner, \
+    AuthenticatedAllowToPost
 from chat.models import Chat
 from chat.serializers import ChatSerializer
 from shelters.filters import PetFilter, SheltersFilter
@@ -19,7 +20,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = SheltersFilter
     search_fields = ('name',)
-    permission_classes = (IsAdminModerOrReadOnly | IsAuthenticated,)
+    permission_classes = (IsAdminModerOrReadOnly | AuthenticatedAllowToPost,)
 
     def get_queryset(self, *args, **kwargs):
         if self.action in ('list', 'on_main',):
