@@ -32,7 +32,7 @@ class ShelterShortSerializer(serializers.ModelSerializer):
         )
         model = Shelter
 
-    # TODO Add logic when payment added
+    # TODO Add logic when algorithm invented
     def get_warning(self, obj):
         return 'yellow'
 
@@ -61,6 +61,7 @@ class ShelterSerializer(serializers.ModelSerializer):
         exclude = ('is_approved',)
         model = Shelter
 
+    # TODO Add logic when payment added
     def get_money_collected(self, obj):
         return 0
 
