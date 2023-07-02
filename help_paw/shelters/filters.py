@@ -17,19 +17,21 @@ class SheltersFilter(FilterSet):
         model = Shelter
         fields = ('warnings', 'is_favourite')
 
+    # TODO Add logic when algorithm invented
     def get_by_colour(self, queryset, name, value):
         if value and value == 'red':
-            return queryset
+            return queryset.none()
         if value and value == 'yellow':
             return queryset
         if value and value == 'green':
-            return queryset
+            return queryset.none()
 
     def get_favourite(self, queryset, name, value):
         if value:
             return queryset.filter(subscribers=self.request.user)
         return queryset
 
+    # TODO Add logic when payment added
     def get_helped(self, queryset, name, value):
         if value:
             return queryset.order_by('?')[:3]

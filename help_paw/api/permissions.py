@@ -1,5 +1,7 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+ALLOW_TO_POST_VIEWS = ('ShelterViewSet',)
+
 
 class IsAdminModerOrReadOnly(BasePermission):
     """Чтение доступно всем,
@@ -11,10 +13,11 @@ class IsAdminModerOrReadOnly(BasePermission):
             return (request.user.is_authenticated and
                     (request.user.is_admin or request.user.is_moderator))
 
-    def has_object_permission(self, request, view, obj):
-        return (request.method in SAFE_METHODS or
-                request.user.is_authenticated and
-                request.user.is_admin or request.user.is_moderator)
+
+class AuthenticatedAllowToPost(BasePermission):
+    def has_permission(self, request, view):
+        if request.method == 'POST' and request.user.is_authenticated:
+            return type(view).__name__ in ALLOW_TO_POST_VIEWS
 
 
 class IsAuthor(BasePermission):

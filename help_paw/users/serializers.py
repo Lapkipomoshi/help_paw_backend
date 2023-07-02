@@ -5,6 +5,8 @@ from djoser.serializers import (UidAndTokenSerializer, UserCreateSerializer,
                                 UserSerializer)
 from rest_framework import serializers
 
+from shelters.serializers import ShelterShortSerializer
+
 User = get_user_model()
 
 
@@ -32,12 +34,20 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 class CustomUserSerializer(UserSerializer):
     email = serializers.EmailField(read_only=True)
+    own_shelter = ShelterShortSerializer(read_only=True, source='shelter')
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'status', 'donations_sum',)
+        fields = (
+            'id', 'email', 'username', 'status', 'donations_sum', 'own_shelter',
+        )
         read_only_fields = ('status', 'donations_sum',)
 
 
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существуте')

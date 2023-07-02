@@ -1,5 +1,3 @@
-import random
-
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -32,8 +30,9 @@ class ShelterShortSerializer(serializers.ModelSerializer):
         )
         model = Shelter
 
+    # TODO Add logic when algorithm invented
     def get_warning(self, obj):
-        return random.choice(['red', 'yellow', 'green'])
+        return 'yellow'
 
     def get_is_favourite(self, obj):
         user = self.context['request'].user
@@ -60,6 +59,7 @@ class ShelterSerializer(serializers.ModelSerializer):
         exclude = ('is_approved',)
         model = Shelter
 
+    # TODO Add logic when payment added
     def get_money_collected(self, obj):
         return 0
 
