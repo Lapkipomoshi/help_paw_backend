@@ -4,11 +4,10 @@ from shelters.models import Pet, Shelter
 
 
 class SheltersFilter(FilterSet):
-    """Фильтрация по наличию задач у приюта"""
     warnings = CharFilter(
         method='get_by_colour',
-        help_text=('Фильтрация приютов по наличию задач, возможные значения: '
-                   '"red", "yellow", "green"')
+        help_text=('Фильтрация приютов по необходимости поддержки, '
+                   'возможные значения: "red", "yellow", "green"')
     )
     is_favourite = BooleanFilter(method='get_favourite')
     is_helped = BooleanFilter(method='get_helped')
@@ -25,6 +24,7 @@ class SheltersFilter(FilterSet):
             return queryset
         if value and value == 'green':
             return queryset.none()
+        return queryset.none()
 
     def get_favourite(self, queryset, name, value):
         if value:
