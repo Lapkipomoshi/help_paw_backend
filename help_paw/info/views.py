@@ -36,7 +36,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
 
 
 class NewsViewSet(ArticleViewSet):
-    """Новости приютов."""
+    """Новости сайта, небезопасные методы доступны только
+    администратору/модератору. Все созданные новости автоматически попадают
+    на главную вкладку новостей."""
     search_fields = ('header',)
 
     def get_queryset(self):
@@ -60,7 +62,8 @@ class NewsViewSet(ArticleViewSet):
 
 
 class HelpArticleViewSet(ArticleViewSet):
-    """Полезные статьи."""
+    """Полезные статьи, небезопасные методы доступны только
+    администратору/модератору."""
     def get_queryset(self):
         if self.action == 'list':
             return HelpArticle.objects.only('id', 'header', 'profile_image')
@@ -75,6 +78,9 @@ class HelpArticleViewSet(ArticleViewSet):
 
 
 class MyShelterNewsViewSet(NewsViewSet):
+    """Новости приюта, небезопасные методы доступны только
+        владельцам приютов. Все созданные новости автоматически попадают
+        на вкладку новостей приюта создателя."""
     permission_classes = (IsAuthenticated and IsShelterOwner,)
 
     def get_queryset(self):
@@ -87,6 +93,9 @@ class MyShelterNewsViewSet(NewsViewSet):
 
 
 class VacancyViewSet(viewsets.ModelViewSet):
+    """Вакансии, небезопасные методы доступны только
+        администратору/модератору. Созданные вакансии попадают во вкладку
+        вакансий сайта."""
     serializer_class = VacancySerializer
     permission_classes = [IsAdminModerOrReadOnly, ]
 
@@ -99,6 +108,7 @@ class VacancyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=('patch',), url_path='toggle-close')
     def toggle_close(self, request, pk):
+        """Переключение статуса закрыта/открыта вакансия"""
         vacancy = get_object_or_404(Vacancy, id=pk)
         vacancy.is_closed = not vacancy.is_closed
         vacancy.save()
@@ -106,6 +116,9 @@ class VacancyViewSet(viewsets.ModelViewSet):
 
 
 class MyShelterVacancyViewSet(VacancyViewSet):
+    """Вакансии приюта, небезопасные методы доступны только
+        владельцам приютов. Все созданные вакансии автоматически попадают
+        на вкладку вакансий приюта создателя."""
     permission_classes = (IsShelterOwner,)
 
     def get_queryset(self):
@@ -118,7 +131,8 @@ class MyShelterVacancyViewSet(VacancyViewSet):
 
 
 class FAQViewSet(viewsets.ModelViewSet):
-    """Ответы на часто задаваемые вопросы."""
+    """Ответы на часто задаваемые вопросы. Небезопасные методы доступны только
+        администратору/модератору."""
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     permission_classes = (IsAdminModerOrReadOnly,)

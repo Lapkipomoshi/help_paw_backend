@@ -14,6 +14,7 @@ class ChatViewSet(mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.DestroyModelMixin,
                   viewsets.GenericViewSet):
+    """Получение списка чатов пользователя, отдельного чата, удаление"""
     serializer_class = ChatSerializer
     permission_classes = (IsAuthenticated, )
 
@@ -29,6 +30,7 @@ class ChatViewSet(mixins.ListModelMixin,
 
     @action(detail=True, methods=('post',), url_path='send-message')
     def send_message(self, request, pk):
+        """Отправить сообщение в чат"""
         author = request.user
         chat = get_object_or_404(Chat, id=pk)
         serializer = self.get_serializer(data=request.data)
@@ -40,6 +42,7 @@ class ChatViewSet(mixins.ListModelMixin,
 class MessageViewSet(mixins.UpdateModelMixin,
                      mixins.DestroyModelMixin,
                      viewsets.GenericViewSet):
+    """Управление сообщениями, изменение и удаление"""
     serializer_class = MessageSerializer
     permission_classes = (IsAuthenticated and IsAuthor,)
 
@@ -53,6 +56,7 @@ class MessageViewSet(mixins.UpdateModelMixin,
 
 
 class MyShelterChatViewSet(ChatViewSet):
+    """Получение списка чатов приюта, отдельного чата, удаление"""
     permission_classes = (IsAuthenticated and IsShelterOwner,)
 
     def get_queryset(self):

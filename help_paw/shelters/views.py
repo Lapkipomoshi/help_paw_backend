@@ -15,7 +15,8 @@ from shelters.serializers import (AnimalTypeSerializer, PetSerializer,
 
 
 class ShelterViewSet(viewsets.ModelViewSet):
-    """Приюты."""
+    """Приюты. небезопасные методы доступны администратору/модератору,
+     аутентифицированные пользователи могут создавать записи."""
     filter_backends = (DjangoFilterBackend,)
     filterset_class = SheltersFilter
     search_fields = ('name',)
@@ -50,6 +51,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=('post',), url_path='start-chat')
     def start_chat(self, request, pk):
+        """Создание чата с приютом, или получение уже имеющегося чата"""
         shelter = get_object_or_404(Shelter, id=pk)
         chat, _ = Chat.objects.get_or_create(shelter=shelter, user=request.user)
         serializer = self.get_serializer(chat)
@@ -57,6 +59,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=('post', 'delete',), url_path='favourite')
     def toggle_is_favourite(self, request, pk):
+        """Добавление/удаление приюта из избранного"""
         shelter = get_object_or_404(Shelter, id=pk)
         user = request.user
         if request.method == 'POST':
@@ -68,6 +71,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
 
 class MyShelterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                        mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """Управление собственным приютом, доступно только для владельцев приюта."""
     permission_classes = (IsShelterOwner,)
     serializer_class = ShelterSerializer
 
@@ -83,7 +87,8 @@ class MyShelterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
 
 class PetViewSet(viewsets.ModelViewSet):
-    """Питомцы."""
+    """Питомцы.
+    Небезопасные методы доступны только администратору/модератору."""
     serializer_class = PetSerializer
     permission_classes = (IsAdminModerOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -97,6 +102,8 @@ class PetViewSet(viewsets.ModelViewSet):
 
 
 class MyShelterPetViewSet(PetViewSet):
+    """Управление питомцами собственного приюта,
+    доступно только для владельцев приюта."""
     permission_classes = (IsShelterOwner,)
 
     def get_queryset(self):
@@ -115,8 +122,8 @@ class MyShelterPetViewSet(PetViewSet):
 
 
 class AnimalTypeViewSet(viewsets.ModelViewSet):
+    """Виды животных.
+    Небезопасные методы доступны только администратору/модератору."""
     permission_classes = (IsAdminModerOrReadOnly,)
     queryset = AnimalType.objects.all()
     serializer_class = AnimalTypeSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('shelters',)
