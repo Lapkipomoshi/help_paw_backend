@@ -26,7 +26,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: jinglemybells/help_paw:test
+          tags: lapkipomoshi/help_paw:test
 
   deploy:
     runs-on: ubuntu-latest
