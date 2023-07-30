@@ -2,8 +2,9 @@ import json
 
 import factory
 import pytest
-from api.serializers import HelpArticleSerializer, ShelterSerializer
 from faker import Faker
+from info.serializers import HelpArticleSerializer
+from shelters.serializers import ShelterSerializer
 
 fake = Faker()
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -11,7 +12,7 @@ pytestmark = pytest.mark.django_db(transaction=True)
 
 class TestSerializers:
 
-    def test_help_article_serializer(self, help_article_factory, rf):
+    def test_help_article_serializer(self, help_article_factory):
 
         must_fail_header = '666'
         valid_header = 'ABC'

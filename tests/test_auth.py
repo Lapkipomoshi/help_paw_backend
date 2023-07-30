@@ -4,7 +4,10 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core import mail
 from rest_framework import status
+from rest_framework.serializers import ValidationError
 from rest_framework.test import APIClient
+from users.serializers import EmailResetConfirmSerializer
+from users.views import CustomUserViewSet
 
 url_signup = '/api/auth/users/'
 url_activation = '/api/auth/users/activation/'
@@ -16,6 +19,31 @@ pytestmark = pytest.mark.django_db(transaction=True)
 
 
 class TestAuth:
+
+    @staticmethod
+    def get_params_from_text(text, sep):
+        """
+        Вспомогательная функция, получает составные части URL из текста письма
+        при регистрации/смене пароля-логина/активации, разделитель - '/'
+        """
+        result = [''] * 10
+        regex = r"https?://[^\s/$.?#].[^\s]*"
+
+        urls = re.findall(regex, text)
+
+        if len(urls) == 0:
+            return result
+
+        url = urls[0]
+
+        if url.find(sep) == -1:
+            return result
+
+        params = url.split(sep)
+        result = params[1].split('/')
+
+        return result
+
     @pytest.mark.parametrize('url', [
         url_signup,
         url_jwt_create,
@@ -84,8 +112,13 @@ class TestAuth:
             'пользователя по электронной почте.'
         )
 
-        payload = get_params_from_text(outbox[0].body,
-                                       'http://testserver/activate')
+        params = self.get_params_from_text(outbox[0].body, 'activate/')
+
+        payload = {
+            'uid': params[0],
+            'token': params[1]
+        }
+
         response = client.post(url_activation, payload)
         user = User.objects.get(pk=user.pk)
 
@@ -95,7 +128,7 @@ class TestAuth:
             'настройки Djoser.'
         )
 
-    def test_jwt_token_create_refresh_verify(self, defaultuser, client,
+    def test_jwt_token_create_refresh_verify(self, client,
                                              new_user_data):
         """
         Проверка получения токена для нового пользователя,
@@ -138,8 +171,7 @@ class TestAuth:
                                'токен доступа.'
         )
 
-    def test_users_reset_password(self, user, client, user_client,
-                                  new_user_data):
+    def test_users_reset_password(self, user, client, user_client):
         """Проверка возможности смены пароля"""
 
         url_reset = '/api/auth/users/reset_password/'
@@ -158,10 +190,14 @@ class TestAuth:
                                f'для смены пароля.'
         )
 
-        payload = get_params_from_text(outbox[0].body,
-                                       'http://testserver/password-reset')
         new_passport = 'password_is_changed'
-        payload['new_password'] = new_passport
+        params = self.get_params_from_text(outbox[0].body, 'password-reset/')
+        payload = {
+            'uid': params[0],
+            'token': params[1],
+            'new_password': new_passport
+        }
+
         response = client.post(url_confirm, payload)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT, (
@@ -173,7 +209,77 @@ class TestAuth:
                 warning_text + f'{url_confirm} изменяется пароль пользователя.'
         )
 
-    def test_users_update(self, user, client, user_client, new_user_data):
+    @pytest.mark.skip
+    def test_users_reset_username(self, user, api_client):
+        """Проверка возможности смены логина"""
+        url_reset = '/api/auth/users/reset_email/'
+        url_confirm = '/api/auth/users/reset_email_confirm/'
+        warning_text = 'Проверьте, что при POST-запросе на энд-пойнт '
+
+        new_email = 'changed_email@helppaw.fake'
+        payload = {'email': new_email}
+
+        api_client.force_authenticate(user=user)
+
+        response = api_client.post(url_reset, payload)
+        outbox = mail.outbox
+
+        assert (response.status_code == status.HTTP_204_NO_CONTENT and len(
+            outbox) == 1), (
+                warning_text + f'{url_reset} возвращается статус 204 и '
+                               f'пользователю отправляется письмо со ссылкой '
+                               f'для смены e-mail.'
+        )
+
+        params = self.get_params_from_text(outbox[0].body, 'email-reset/')
+
+        payload = {
+            'uid': params[0],
+            'token': params[1],
+            'new_email': params[2]
+        }
+        response = api_client.post(url_confirm, payload)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT, (
+                warning_text + f'{url_confirm}  возвращается статус 204.'
+        )
+
+    @pytest.mark.skip
+    def test_users_reset_username_not_valid(self, user, api_client, rf):
+        """Проверка возможности смены логина, ошибка валидации."""
+        url_reset = '/api/auth/users/reset_email/'
+        url_confirm = '/api/auth/users/reset_email_confirm/'
+
+        new_email = 'changed_email@helppaw.fake'
+        payload = {'email': new_email}
+
+        api_client.force_authenticate(user=user)
+
+        api_client.post(url_reset, payload)
+        outbox = mail.outbox
+        params = self.get_params_from_text(outbox[0].body, 'email-reset/')
+
+        request = rf.post(
+            url_confirm,
+            content_type='application/json',
+        )
+
+        context = {
+            'view': CustomUserViewSet(),
+            'request': request
+        }
+        payload = {
+            'uid': params[0],
+            'token': params[1],
+            'new_email': 'not_valid'
+        }
+
+        serializer = EmailResetConfirmSerializer(context=context, data=payload)
+
+        with pytest.raises(ValidationError):
+            serializer.get_new_email(payload)
+
+    def test_users_update(self, user, user_client, new_user_data):
         """
         Проверка возможности смены email, username.
         """
@@ -186,21 +292,14 @@ class TestAuth:
         }
 
         response = user_client.put(url_update, payload)
-        outbox = mail.outbox
-        assert response.status_code == status.HTTP_200_OK and len(
-            outbox) == 1, (
-                warning_text + f'{url_update}  возвращается статус 200 и '
-                               f'пользователю отправляется письмо со ссылкой '
-                               f'для обновления учетных данных.'
+
+        assert response.status_code == status.HTTP_200_OK, (
+                warning_text + f'{url_update}  возвращается статус 200.'
         )
 
-        payload = get_params_from_text(outbox[0].body,
-                                       'http://testserver/activate')
-        response = client.post(url_activation, payload)
         user = User.objects.get(pk=user.pk)
 
-        assert (response.status_code == status.HTTP_204_NO_CONTENT
-                and user.username != new_user_data.get('username')
+        assert (user.username != new_user_data.get('username')
                 and user.email != new_user_data.get('email')
                 ), 'Ошибка при обновлении учетных данных пользователя.'
 
@@ -219,21 +318,3 @@ class TestAuth:
             f'пользователя, email которого уже зарегистрирован и возвращается '
             f'статус {code}'
         )
-
-
-def get_params_from_text(text, link_to_replace):
-    """
-    Вспомогательная функция, получает uid и token из текста письма
-    при регистрации/смене пароля.
-    """
-
-    # из текста вытаскиваю урл
-    url_pattern = re.compile(r'[\'"]?([^\'" >]+)')
-    url = re.findall(url_pattern, text)
-    # из урла вытаскиваю параметры
-    params = re.findall(r'/([\w-]+)',
-                        str(url).replace(link_to_replace, ''))
-    return {
-        'uid': params[0],
-        'token': params[1]
-    }

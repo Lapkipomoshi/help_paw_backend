@@ -2,7 +2,6 @@ import pytest
 
 
 class TestNewsEndpoint:
-
     endpoint = '/api/v1/news/'
 
     @pytest.mark.django_db
@@ -73,19 +72,19 @@ class TestHelpArticlesEndpoint:
 
 
 class TestPetsEndpoint:
-    endpoint = '/api/v1/pets/'
 
     @pytest.mark.django_db
     def test_get_pets_not_authorised(self, client, pet_factory):
         """ GET запрос доступен для неавторизованных пользователей """
-        pet_factory()
-        response = client.get(self.endpoint)
+        pet = pet_factory()
+        response = client.get(f'/api/v1/shelters/{pet.shelter.pk}/pets/')
         assert response.status_code == 200
 
     @pytest.mark.django_db
-    def test_post_pets_not_authorised(self, client):
+    def test_post_pets_not_authorised(self, client, shelter_factory):
         """ POST запрос не доступен для неавторизованных пользователей """
-        response = client.post(self.endpoint)
+        shelter = shelter_factory()
+        response = client.post(f'/api/v1/shelters/{shelter.pk}/pets/')
         assert response.status_code == 401
 
 
@@ -114,12 +113,12 @@ class TestAnimalTypesEndpoint:
         animal_type_factory()
         response = client.get(self.endpoint)
         assert response.status_code == 200
-        assert set(response.data[0].keys()) == {'id', 'name', 'slug'}
+        assert set(response.data[0].keys()) == {'name', 'slug'}
 
     # пока пропускаем, до выяснения про POST для анонимов
     @pytest.mark.skip
     # @pytest.mark.django_db
-    def test_post_animal_types(self, client, animal_type_factory):
+    def test_post_animal_types(self, client):
         """Проверяем, что работает только GET-запрос"""
         data = {"name": "попугай", "slug": "parrot"}
         assert client.post(self.endpoint, data).status_code == 405

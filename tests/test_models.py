@@ -1,7 +1,12 @@
+import io
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from faker import Faker
+from info.models import MAX_IMAGE_CNT, MAX_IMAGE_SIZE, Image, News
+from PIL import Image as PIL_Image
 from shelters.models import Shelter
 
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -10,6 +15,19 @@ User = get_user_model()
 
 
 class TestInfoModels:
+
+    @staticmethod
+    def get_image_data(target_size_bytes=1000):
+        size = 10000
+        while True:
+            image = PIL_Image.new("RGB", (size, size))
+            image_data = io.BytesIO()
+            image.save(image_data, format="JPEG")
+
+            if len(image_data.getvalue()) > target_size_bytes:
+                break
+            size += 10000
+        return image_data.getvalue()
 
     def test_news_str_method(self, news_factory):
         my_news = news_factory(header='test_header')
@@ -45,6 +63,26 @@ class TestInfoModels:
         my_education = education_factory(name='test_education')
 
         assert my_education.__str__() == 'test_education'
+
+    def test_image_size_validation(self):
+        target_size = MAX_IMAGE_SIZE + 1
+        image_data = self.get_image_data(target_size)
+
+        my_image = Image(image=SimpleUploadedFile(name='test_image.jpg',
+                                                  content=image_data))
+        with pytest.raises(ValidationError):
+            my_image.full_clean()
+
+    def test_gallery_validation(self):
+        my_news = News.objects.create()
+        with pytest.raises(ValidationError):
+            for i in range(MAX_IMAGE_CNT + 1):
+                image_data = self.get_image_data()
+                my_image = Image.objects.create(
+                    image=SimpleUploadedFile(name='test_image.jpg',
+                                             content=image_data))
+                my_news.gallery.add(my_image)
+
 
 class TestShelterModels:
 
