@@ -1,3 +1,4 @@
+from datetime import date
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
@@ -28,14 +29,31 @@ class Pet(models.Model):
         on_delete=models.PROTECT
     )
     sex = models.CharField(
-        'Пол жиотного',
+        'Пол животного',
         max_length=6,
         choices=SEX_CHOICE,
         default=OTHER
     )
+
     birth_date = models.DateField(null=True, blank=True)
     about = models.TextField('Описание животного', max_length=500)
-    photo = models.ImageField('Фото животного', upload_to='photo/%Y/%m/%d/')
+    gallery = models.ManyToManyField(
+        'gallery.Image',
+        verbose_name='Галерея животного',
+        related_name='%(class)s_related',
+        related_query_name='%(class)s',
+        blank=True
+    )
+    breed = models.ForeignKey(
+        'Breed',
+        verbose_name='Порода животного',
+        related_name='pets',
+        on_delete=models.PROTECT
+    )
+    admission_date = models.DateField(
+        'Дата поступления в приют',
+        default=date.today
+    )
     shelter = models.ForeignKey(
         'Shelter',
         verbose_name='Приют',
@@ -159,7 +177,7 @@ class Task(models.Model):
     class Meta:
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
-        ordering = ('-pub_date', )
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.name
@@ -172,6 +190,23 @@ class AnimalType(models.Model):
     class Meta:
         verbose_name = 'Вид животного'
         verbose_name_plural = 'Виды животных'
+
+    def __str__(self):
+        return self.name
+
+
+class Breed(models.Model):
+    animal_type = models.ForeignKey(
+        'AnimalType',
+        verbose_name='Вид животного',
+        related_name='breeds',
+        on_delete=models.PROTECT)
+    slug = models.SlugField('Слаг', primary_key=True, max_length=20)
+    name = models.CharField('Порода животного', unique=True, max_length=50)
+
+    class Meta:
+        verbose_name = 'Порода животного'
+        verbose_name_plural = 'Породы животных'
 
     def __str__(self):
         return self.name

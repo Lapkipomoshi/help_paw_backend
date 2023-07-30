@@ -1,9 +1,10 @@
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from info.models import (FAQ, MAX_IMAGE_CNT, MAX_IMAGE_SIZE, HelpArticle,
-                         Image, News, Vacancy)
+from info.models import FAQ,  HelpArticle, News, Vacancy
+from gallery.models import MAX_IMAGE_CNT, Image
 from shelters.serializers import ShelterNameSerializer
+from gallery.serializers import ImageSerializer, ImageValidator
 
 
 class VacancySerializer(serializers.ModelSerializer):
@@ -15,28 +16,6 @@ class VacancySerializer(serializers.ModelSerializer):
             'description', 'pub_date', 'is_closed',
         )
         model = Vacancy
-
-
-class ImageSerializer(serializers.Serializer):
-    image = Base64ImageField()
-
-    class Meta:
-        fields = ('image',)
-        model = Image
-
-
-class ImageValidator:
-
-    def __call__(self, value):
-        if not self.is_valid(value):
-            raise serializers.ValidationError(
-                f'Размер изображения не должен превышать {MAX_IMAGE_SIZE} МБ')
-
-    def is_valid(self, value):
-        image = value.get('image')
-        if image and image.size > MAX_IMAGE_SIZE:
-            return False
-        return True
 
 
 class ArticleSerializer(serializers.ModelSerializer):
