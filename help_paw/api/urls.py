@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from chat.views import ChatViewSet, MessageViewSet, MyShelterChatViewSet
 from info.views import (FAQViewSet, HelpArticleViewSet, MyShelterNewsViewSet,
-                        MyShelterVacancyViewSet, NewsViewSet, VacancyViewSet)
+                        MyShelterVacancyViewSet, NewsViewSet, VacancyViewSet,
+                        ScheduleViewSet, EducationViewSet)
 from shelters.views import (AnimalTypeViewSet, MyShelterPetViewSet,
                             MyShelterViewSet, PetViewSet, ShelterViewSet)
 from users.views import CustomUserViewSet
@@ -37,6 +38,8 @@ v1_router.register(r'my-shelter/chats', MyShelterChatViewSet,
 v1_router.register(r'chats/(?P<chat_id>\d+)/messages', MessageViewSet,
                    basename='messages')
 v1_router.register(r'my-shelter', MyShelterViewSet, basename='my_shelter')
+v1_router.register(r'schedules', ScheduleViewSet, basename='schedules')
+v1_router.register(r'educations', EducationViewSet, basename='educations')
 user_router.register(r'users', CustomUserViewSet, basename='users')
 
 urlpatterns = [

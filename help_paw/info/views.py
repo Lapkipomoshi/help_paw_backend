@@ -5,10 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.permissions import IsAdminModerOrReadOnly, IsShelterOwner
-from info.models import FAQ, HelpArticle, News, Vacancy
+from info.models import FAQ, HelpArticle, News, Vacancy, Schedule, Education
 from info.serializers import (FAQSerializer, HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
-                              NewsShortSerializer, VacancySerializer)
+                              NewsShortSerializer, VacancySerializer,
+                              ScheduleSerializer, EducationSerializer)
 from shelters.models import Shelter
 
 
@@ -135,4 +136,20 @@ class FAQViewSet(viewsets.ModelViewSet):
         администратору/модератору."""
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
+    permission_classes = (IsAdminModerOrReadOnly,)
+
+
+class ScheduleViewSet(viewsets.ModelViewSet):
+    """Графики работы для вакансий. Небезопасные методы доступны только
+        администратору/модератору."""
+    queryset = Schedule.objects.all()
+    serializer_class = ScheduleSerializer
+    permission_classes = (IsAdminModerOrReadOnly,)
+
+
+class EducationViewSet(viewsets.ModelViewSet):
+    """Образование для вакансий. Небезопасные методы доступны только
+        администратору/модератору."""
+    queryset = Education.objects.all()
+    serializer_class = EducationSerializer
     permission_classes = (IsAdminModerOrReadOnly,)

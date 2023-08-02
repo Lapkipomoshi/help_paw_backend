@@ -123,14 +123,14 @@ class Vacancy(models.Model):
 
 class Schedule(models.Model):
     slug = models.SlugField(primary_key=True, max_length=25)
-    names = models.CharField(max_length=25)
+    name = models.CharField(max_length=25)
 
     class Meta:
         verbose_name = 'График работы'
         verbose_name_plural = 'Графики работы'
 
     def __str__(self):
-        return self.names
+        return self.name
 
 
 class Education(models.Model):
