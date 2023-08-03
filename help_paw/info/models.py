@@ -85,6 +85,12 @@ class StaticInfo(models.Model):
 
 
 class Vacancy(models.Model):
+    NDFL = 'ndfl'
+    NO_NDFL = 'no_ndfl'
+    PAYMENT_CHOICE = (
+        (NDFL, 'с НДФЛ'),
+        (NO_NDFL, 'На руки')
+    )
     shelter = models.ForeignKey(
         Shelter,
         verbose_name='Вакансия в приюте',
@@ -95,7 +101,12 @@ class Vacancy(models.Model):
         default=None
     )
     salary = models.PositiveIntegerField('Оплата')
-    is_ndfl = models.BooleanField('НДФЛ', default=False)
+    is_ndfl = models.CharField(
+        'Тип оплаты',
+        choices=PAYMENT_CHOICE,
+        max_length=7,
+        default=NDFL
+    )
     education = models.ForeignKey(
         'Education',
         verbose_name='Образование',
