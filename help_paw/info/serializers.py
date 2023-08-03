@@ -1,8 +1,8 @@
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from info.models import (FAQ, MAX_IMAGE_CNT, MAX_IMAGE_SIZE, HelpArticle,
-                         Image, News, Vacancy, Schedule, Education)
+from info.models import (FAQ, MAX_IMAGE_CNT, MAX_IMAGE_SIZE, Education,
+                         HelpArticle, Image, News, Schedule, Vacancy)
 from shelters.serializers import ShelterNameSerializer
 
 

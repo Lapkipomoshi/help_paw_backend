@@ -5,11 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.permissions import IsAdminModerOrReadOnly, IsShelterOwner
-from info.models import FAQ, HelpArticle, News, Vacancy, Schedule, Education
-from info.serializers import (FAQSerializer, HelpArticleSerializer,
+from info.models import FAQ, Education, HelpArticle, News, Schedule, Vacancy
+from info.serializers import (EducationSerializer, FAQSerializer,
+                              HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
-                              NewsShortSerializer, VacancySerializer,
-                              ScheduleSerializer, EducationSerializer)
+                              NewsShortSerializer, ScheduleSerializer,
+                              VacancySerializer)
 from shelters.models import Shelter
 
 

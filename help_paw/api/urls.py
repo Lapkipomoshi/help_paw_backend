@@ -2,9 +2,9 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from chat.views import ChatViewSet, MessageViewSet, MyShelterChatViewSet
-from info.views import (FAQViewSet, HelpArticleViewSet, MyShelterNewsViewSet,
-                        MyShelterVacancyViewSet, NewsViewSet, VacancyViewSet,
-                        ScheduleViewSet, EducationViewSet)
+from info.views import (EducationViewSet, FAQViewSet, HelpArticleViewSet,
+                        MyShelterNewsViewSet, MyShelterVacancyViewSet,
+                        NewsViewSet, ScheduleViewSet, VacancyViewSet)
 from shelters.views import (AnimalTypeViewSet, MyShelterPetViewSet,
                             MyShelterViewSet, PetViewSet, ShelterViewSet)
 from users.views import CustomUserViewSet
