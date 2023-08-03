@@ -54,6 +54,10 @@ class ShelterSerializer(serializers.ModelSerializer):
     working_from_hour = serializers.TimeField(format='%H:%M')
     working_to_hour = serializers.TimeField(format='%H:%M')
     is_favourite = serializers.SerializerMethodField()
+    count_vacancies = serializers.IntegerField(read_only=True)
+    count_pets = serializers.IntegerField(read_only=True)
+    count_news = serializers.IntegerField(read_only=True)
+    count_tasks = serializers.IntegerField(read_only=True)
 
     class Meta:
         exclude = ('is_approved',)

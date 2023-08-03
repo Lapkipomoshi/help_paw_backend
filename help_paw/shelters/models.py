@@ -147,19 +147,15 @@ class Task(models.Model):
     shelter = models.ForeignKey(
         'Shelter',
         verbose_name='Приют',
-        related_name='task',
+        related_name='tasks',
         on_delete=models.CASCADE
     )
     name = models.CharField('Краткое описание задачи', max_length=50)
     description = models.TextField('Описание задачи', max_length=500)
-    pub_date = models.DateField('Дата публикации', auto_now_add=True)
-    is_emergency = models.BooleanField('Срочная задача', default=False)
-    is_finished = models.BooleanField('Задача завершена', default=False)
 
     class Meta:
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
-        ordering = ('-pub_date', )
 
     def __str__(self):
         return self.name

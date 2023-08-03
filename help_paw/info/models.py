@@ -85,6 +85,12 @@ class StaticInfo(models.Model):
 
 
 class Vacancy(models.Model):
+    NDFL = 'ndfl'
+    NO_NDFL = 'no_ndfl'
+    PAYMENT_CHOICE = (
+        (NDFL, 'с НДФЛ'),
+        (NO_NDFL, 'На руки')
+    )
     shelter = models.ForeignKey(
         Shelter,
         verbose_name='Вакансия в приюте',
@@ -95,7 +101,12 @@ class Vacancy(models.Model):
         default=None
     )
     salary = models.PositiveIntegerField('Оплата')
-    is_ndfl = models.BooleanField('НДФЛ', default=False)
+    is_ndfl = models.CharField(
+        'Тип оплаты',
+        choices=PAYMENT_CHOICE,
+        max_length=7,
+        default=NDFL
+    )
     education = models.ForeignKey(
         'Education',
         verbose_name='Образование',
@@ -123,14 +134,14 @@ class Vacancy(models.Model):
 
 class Schedule(models.Model):
     slug = models.SlugField(primary_key=True, max_length=25)
-    names = models.CharField(max_length=25)
+    name = models.CharField(max_length=25)
 
     class Meta:
         verbose_name = 'График работы'
         verbose_name_plural = 'Графики работы'
 
     def __str__(self):
-        return self.names
+        return self.name
 
 
 class Education(models.Model):
