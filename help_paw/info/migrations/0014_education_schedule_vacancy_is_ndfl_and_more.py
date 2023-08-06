@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name='Schedule',
             fields=[
                 ('slug', models.SlugField(max_length=25, primary_key=True, serialize=False)),
-                ('names', models.CharField(max_length=25)),
+                ('name', models.CharField(max_length=25)),
             ],
             options={
                 'verbose_name': 'График работы',

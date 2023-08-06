@@ -1,3 +1,4 @@
+from datetime import date
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
@@ -28,14 +29,25 @@ class Pet(models.Model):
         on_delete=models.PROTECT
     )
     sex = models.CharField(
-        'Пол жиотного',
+        'Пол животного',
         max_length=6,
         choices=SEX_CHOICE,
         default=OTHER
     )
     birth_date = models.DateField(null=True, blank=True)
     about = models.TextField('Описание животного', max_length=500)
-    photo = models.ImageField('Фото животного', upload_to='photo/%Y/%m/%d/')
+    gallery = models.ManyToManyField(
+        'gallery.Image',
+        verbose_name='Галерея животного',
+        related_name='%(class)s_related',
+        related_query_name='%(class)s',
+        blank=True
+    )
+    breed = models.CharField('Порода животного', max_length=100)
+    admission_date = models.DateField(
+        'Дата поступления в приют',
+        default=date.today
+    )
     shelter = models.ForeignKey(
         'Shelter',
         verbose_name='Приют',
@@ -108,7 +120,7 @@ class Shelter(models.Model):
         validators=[RegexValidator(regex=r'^https://vk.com/')]
     )
     ok_page = models.URLField(
-        'Группа в Однокласниках',
+        'Группа в Одноклассниках',
         max_length=200,
         blank=True,
         validators=[RegexValidator(regex=r'^https://ok.ru/')]

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'info.apps.InfoConfig',
     'api.apps.ApiConfig',
     'chat.apps.ChatConfig',
+    'gallery.apps.GalleryConfig',
     'django_cleanup.apps.CleanupConfig',
     'corsheaders'
 ]
