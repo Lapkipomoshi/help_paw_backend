@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from faker import Faker
-from info.models import MAX_IMAGE_CNT, MAX_IMAGE_SIZE, Image, News
+from info.models import News
+from gallery.models import MAX_IMAGE_CNT, MAX_IMAGE_SIZE, Image
 from PIL import Image as PIL_Image
 from shelters.models import Shelter
 
@@ -55,7 +56,7 @@ class TestInfoModels:
         assert my_vacancy.__str__() == 'test_position'
 
     def test_schedule_str_method(self, schedule_factory):
-        my_schedule = schedule_factory(names='test_schedule')
+        my_schedule = schedule_factory(name='test_schedule')
 
         assert my_schedule.__str__() == 'test_schedule'
 

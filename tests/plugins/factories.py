@@ -112,8 +112,8 @@ class TaskFactory(factory.django.DjangoModelFactory):
     shelter = factory.SubFactory(ShelterFactory)
     name = fake.name()
     description = fake.text()
-    is_emergency = False
-    is_finished = False
+    # is_emergency = False
+    # is_finished = False
 
 
 class NewsFactory(factory.django.DjangoModelFactory):
@@ -156,7 +156,7 @@ class ScheduleFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Schedule
 
-    names = factory.Sequence(lambda n: "Schedule #%s" % n)
+    name = factory.Sequence(lambda n: "Schedule #%s" % n)
     slug = factory.Sequence(lambda n: fake.slug() + str(n))
 
 
@@ -177,6 +177,7 @@ class VacancyFactory(factory.django.DjangoModelFactory):
     education = factory.SubFactory(EducationFactory)
     position = fake.word()
     description = fake.sentence()
+    is_ndfl = 'ndfl'
 
     @factory.post_generation
     def schedule(self, create, extracted):
