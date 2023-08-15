@@ -1,9 +1,10 @@
 import datetime as dt
+
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from shelters.models import AnimalType, Pet, Shelter
 from gallery.serializers import ImageSerializer, ImageValidator
+from shelters.models import AnimalType, Pet, Shelter
 
 
 class AnimalTypeSerializer(serializers.ModelSerializer):
@@ -92,18 +93,26 @@ class PetSerializer(serializers.ModelSerializer):
     animal_type = serializers.SlugRelatedField(
         slug_field='slug', queryset=AnimalType.objects.all()
     )
-    age = serializers.IntegerField(default=0)
     gallery = ImageSerializer(many=True, required=False,
                               validators=[ImageValidator()])
     is_adopted = serializers.BooleanField(read_only=True)
-    sheltering_time = serializers.SerializerMethodField()
+    birth_date = serializers.DateField(write_only=True)
+    admission_date = serializers.DateField(required=True, write_only=True)
+    age = serializers.SerializerMethodField(read_only=True)
+    sheltering_time = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = (
-            'id', 'name', 'animal_type', 'sex', 'age', 'about', 'shelter',
-            'gallery', 'is_adopted', 'breed', 'sheltering_time',
+            'id', 'name', 'animal_type', 'sex', 'birth_date', 'about',
+            'shelter', 'gallery', 'is_adopted', 'breed', 'admission_date',
+            'sheltering_time', 'age'
         )
         model = Pet
 
     def get_sheltering_time(self, obj):
-        return dt.date.today() - obj.admission_date
+        duration = dt.date.today() - obj.admission_date
+        return int(duration.days / 365)
+
+    def get_age(self, obj):
+        duration = dt.date.today() - obj.birth_date
+        return int(duration.days / 365)

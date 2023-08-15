@@ -1,9 +1,10 @@
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from info.models import FAQ, Education, HelpArticle, News, Schedule, Vacancy
-from gallery.models import Image, MAX_IMAGE_CNT
-from shelters.serializers import ShelterNameSerializer
+
+from gallery.models import MAX_IMAGE_CNT, Image
 from gallery.serializers import ImageSerializer, ImageValidator
+from info.models import FAQ, Education, HelpArticle, News, Schedule, Vacancy
+from shelters.serializers import ShelterNameSerializer
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -18,8 +19,10 @@ class EducationSerializer(serializers.ModelSerializer):
         model = Education
 
 
-class VacancySerializer(serializers.ModelSerializer):
+class VacancyReadSerializer(serializers.ModelSerializer):
     is_closed = serializers.BooleanField(read_only=True)
+    education = EducationSerializer()
+    schedule = ScheduleSerializer(many=True)
 
     class Meta:
         fields = (
@@ -27,7 +30,15 @@ class VacancySerializer(serializers.ModelSerializer):
             'description', 'pub_date', 'is_closed',
         )
         model = Vacancy
-        depth = 1
+
+
+class VacancyWriteSerializer(VacancyReadSerializer):
+    education = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Education.objects.all()
+    )
+    schedule = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Schedule.objects.all(), many=True
+    )
 
 
 class ArticleSerializer(serializers.ModelSerializer):
