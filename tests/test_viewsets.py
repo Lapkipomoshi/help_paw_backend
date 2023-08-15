@@ -10,7 +10,7 @@ from faker import Faker
 from info.models import News, Vacancy
 from info.serializers import (HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
-                              NewsShortSerializer, VacancySerializer)
+                              NewsShortSerializer, VacancyReadSerializer)
 from info.views import (MyShelterNewsViewSet, MyShelterVacancyViewSet,
                         NewsViewSet)
 from shelters.models import Pet, Shelter
@@ -498,8 +498,8 @@ class TestInfoViewSets:
         )
         request.user = user
 
-        serializer = VacancySerializer(data=payload,
-                                       context={'request': request})
+        serializer = VacancyReadSerializer(data=payload,
+                                           context={'request': request})
         assert serializer.is_valid()
         # FIXME
         # serializer.save()

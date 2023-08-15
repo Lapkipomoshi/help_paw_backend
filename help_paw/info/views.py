@@ -10,7 +10,7 @@ from info.serializers import (EducationSerializer, FAQSerializer,
                               HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
                               NewsShortSerializer, ScheduleSerializer,
-                              VacancySerializer)
+                              VacancyReadSerializer, VacancyWriteSerializer)
 from shelters.models import Shelter
 
 
@@ -98,8 +98,12 @@ class VacancyViewSet(viewsets.ModelViewSet):
     """Вакансии, небезопасные методы доступны только
         администратору/модератору. Созданные вакансии попадают во вкладку
         вакансий сайта."""
-    serializer_class = VacancySerializer
     permission_classes = [IsAdminModerOrReadOnly, ]
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return VacancyReadSerializer
+        return VacancyWriteSerializer
 
     def get_queryset(self):
         shelter_id = self.kwargs.get('shelter_id')
