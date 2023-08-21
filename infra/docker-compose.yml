@@ -2,7 +2,7 @@ version: '3.3'
 services:
 
   frontend:
-    image: jinglemybells/help_paw_f:latest
+    image: lapkipomoshi/help_paw_f:latest
     volumes:
       - ../frontend/:/app/result_build/
 
@@ -14,7 +14,7 @@ services:
       - ./.env
 
   backend:
-    image: jinglemybells/help_paw:latest
+    image: lapkipomoshi/help_paw:latest
     restart: always
     volumes:
       - static_value:/app/static_files/
