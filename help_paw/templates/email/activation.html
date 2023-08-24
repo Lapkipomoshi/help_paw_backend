@@ -1,25 +1,4 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-    </head>
-    <body>
-        {% block subject %}
-            Активация аккаунта на сайте {{ site_name }}
-        {% endblock subject %}
-        {% block text_body %}
-            Вышел медведь из леса, видит машина горит. Сел в нее и сгорел. Это был анекдот.
-
-            А это ваша активационная ссылка:
-            {{ protocol }}://{{ domain }}/{{ url|safe }}
-
-            Спасибо за регистрацию!
-
-            Команда {{ site_name }}
-        {% endblock text_body %}
-    </body>
-</html>
-<!DOCTYPE html>
+{% block html_body %}
 <html lang="ru">
 <head>
   <meta name="viewport" content="width=device-width" />
@@ -385,3 +364,4 @@
 </table>
 </body>
 </html>
+{% endblock html_body %}
