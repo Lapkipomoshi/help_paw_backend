@@ -12,8 +12,7 @@ from info.serializers import (HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
                               NewsShortSerializer, VacancyReadSerializer,
                               EducationSerializer, ScheduleSerializer)
-from info.views import (MyShelterNewsViewSet, MyShelterVacancyViewSet,
-                        NewsViewSet)
+from info.views import MyShelterNewsViewSet, NewsViewSet
 from shelters.models import Pet, Shelter
 from shelters.serializers import ShelterSerializer, ShelterShortSerializer
 from shelters.views import ShelterViewSet

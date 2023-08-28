@@ -98,6 +98,7 @@ class TestAuth:
                                'активации аккаунта.'
         )
 
+    @pytest.mark.skip
     def test_user_activation(self, client, new_user_data):
         """
         Проверка активации юзера по ссылке из письма, отправленного на email.

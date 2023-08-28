@@ -5,11 +5,11 @@ import pytest
 from faker import Faker
 from info.serializers import HelpArticleSerializer
 from shelters.serializers import ShelterSerializer
-from gallery.serializers import ImageSerializer
-from gallery.models import MAX_IMAGE_SIZE, Image
+from gallery.models import MAX_IMAGE_SIZE
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.exceptions import ValidationError
 from tests.plugins.methods import get_image_data
+from rest_framework.exceptions import ValidationError
+from gallery.serializers import ImageValidator
 
 fake = Faker()
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -83,25 +83,24 @@ class TestSerializers:
                                        context={'request': request})
         assert serializer.is_valid()
 
-    def test_gallery_image_validator(self, help_article_factory):
+    def test_gallery_image_validator(self):
+        validator = ImageValidator()
 
-        # target_size = MAX_IMAGE_SIZE + 1
-        # image_data = get_image_data(target_size)
-        #
-        # image = Image(image=SimpleUploadedFile(name='test_image.jpg',
-        #                                        content=image_data))
-        #
-        # image_serializer = ImageSerializer(image)
-        #
-        # payload = factory.build(
-        #     dict,
-        #     FACTORY_CLASS=help_article_factory,
-        #     gallery=[{'image', image_data}, ]  # [image_serializer.data, ]
-        # )
-        #
-        # serializer = HelpArticleSerializer(data=payload)
-        #
-        # assert serializer.is_valid()
-        pass
+        target_size = MAX_IMAGE_SIZE + 1
+        bytes_data = get_image_data(target_size)
 
+        big_image = SimpleUploadedFile(name='test_image.jpg',
+                                       content=bytes_data)
+        data = {'image': big_image}
 
+        with pytest.raises(ValidationError):
+            validator(data)
+
+        target_size = 1000
+        bytes_data = get_image_data(target_size)
+
+        small_image = SimpleUploadedFile(name='test_image.jpg',
+                                         content=bytes_data)
+        data = {'image': small_image}
+
+        assert validator(data) is None
