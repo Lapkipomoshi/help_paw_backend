@@ -35,8 +35,11 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (os.getenv('DEBUG', default='True') == 'True')
 
-ALLOWED_HOSTS = ['*']
-
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='*').split()
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = ['https://lapkipomoshi.ru/', 'https://89.108.79.31/']
 
 # Application definition
 
