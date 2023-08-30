@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
@@ -28,19 +30,30 @@ class Pet(models.Model):
         on_delete=models.PROTECT
     )
     sex = models.CharField(
-        'Пол жиотного',
+        'Пол животного',
         max_length=6,
         choices=SEX_CHOICE,
         default=OTHER
     )
     birth_date = models.DateField(null=True, blank=True)
     about = models.TextField('Описание животного', max_length=500)
-    photo = models.ImageField('Фото животного', upload_to='photo/%Y/%m/%d/')
+    gallery = models.ManyToManyField(
+        'gallery.Image',
+        verbose_name='Галерея животного',
+        related_name='%(class)s_related',
+        related_query_name='%(class)s',
+        blank=True
+    )
+    breed = models.CharField('Порода животного', max_length=100)
+    admission_date = models.DateField(
+        'Дата поступления в приют',
+        default=date.today
+    )
     shelter = models.ForeignKey(
         'Shelter',
         verbose_name='Приют',
         related_name='pets',
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     is_adopted = models.BooleanField('Нашел дом', default=False)
 
@@ -108,7 +121,7 @@ class Shelter(models.Model):
         validators=[RegexValidator(regex=r'^https://vk.com/')]
     )
     ok_page = models.URLField(
-        'Группа в Однокласниках',
+        'Группа в Одноклассниках',
         max_length=200,
         blank=True,
         validators=[RegexValidator(regex=r'^https://ok.ru/')]
@@ -127,6 +140,18 @@ class Shelter(models.Model):
         verbose_name = 'Приют'
         verbose_name_plural = 'Приюты'
 
+    def save(self, *args, **kwargs):
+        owner = self.owner
+        owner.status = User.SHELTER_OWNER
+        owner.save()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        owner = self.owner
+        owner.status = User.USER
+        owner.save()
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -135,27 +160,23 @@ class Task(models.Model):
     shelter = models.ForeignKey(
         'Shelter',
         verbose_name='Приют',
-        related_name='task',
+        related_name='tasks',
         on_delete=models.CASCADE
     )
     name = models.CharField('Краткое описание задачи', max_length=50)
     description = models.TextField('Описание задачи', max_length=500)
-    pub_date = models.DateField('Дата публикации', auto_now_add=True)
-    is_emergency = models.BooleanField('Срочная задача', default=False)
-    is_finished = models.BooleanField('Задача завершена', default=False)
 
     class Meta:
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
-        ordering = ('-pub_date', )
 
     def __str__(self):
         return self.name
 
 
 class AnimalType(models.Model):
+    slug = models.SlugField('Слаг', primary_key=True, max_length=20)
     name = models.CharField('Вид животного', unique=True, max_length=15)
-    slug = models.SlugField('Слаг', unique=True, max_length=20)
 
     class Meta:
         verbose_name = 'Вид животного'

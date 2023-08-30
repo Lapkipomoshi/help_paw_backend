@@ -35,8 +35,11 @@ SECRET_KEY = os.getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (os.getenv('DEBUG', default='True') == 'True')
 
-ALLOWED_HOSTS = ['*']
-
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='*').split()
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = ['https://lapkipomoshi.ru/', 'https://89.108.79.31/']
 
 # Application definition
 
@@ -49,18 +52,23 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'drf_yasg',
     'rest_framework',
+    'django_extensions',
     'django_filters',
     'djoser',
     'users.apps.UsersConfig',
     'shelters.apps.SheltersConfig',
     'info.apps.InfoConfig',
     'api.apps.ApiConfig',
+    'chat.apps.ChatConfig',
+    'gallery.apps.GalleryConfig',
     'django_cleanup.apps.CleanupConfig',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -75,7 +83,7 @@ ROOT_URLCONF = 'help_paw.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -116,6 +124,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 10
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -167,23 +178,28 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'user_create': 'api.serializers.CustomUserCreateSerializer',
-        'user': 'api.serializers.CustomUserSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
-        # 'token_create': 'apps.accounts.serializers.CustomTokenCreateSerializer'
+        'user_create': 'users.serializers.CustomUserCreateSerializer',
+        'user': 'users.serializers.CustomUserSerializer',
+        'current_user': 'users.serializers.CustomUserSerializer',
+        'username_reset_confirm': 'users.serializers.EmailResetConfirmSerializer'
     },
 
     'PERMISSIONS': {
         'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+        'username_reset': ['rest_framework.permissions.IsAuthenticated'],
     },
     'HIDE_USERS': True,
     'SEND_ACTIVATION_EMAIL': True,
     'ACTIVATION_URL': 'activate/{uid}/{token}/',
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
-    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}/'
+    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}/',
+    'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True,
+    'USERNAME_RESET_CONFIRM_URL': 'email-reset/{uid}/{token}/'
 }
 
+# 1 day
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
@@ -211,8 +227,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 SITE_NAME = "Лапки помощи"
 
-# local_settings.py DEBUG=True
-try:
-    from .local_settings import *
-except ImportError:
-    pass
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = ["https://lapkipomoshi.ru"]

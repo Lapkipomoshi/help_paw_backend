@@ -8,6 +8,11 @@ class Article(models.Model):
     text = models.TextField('Текст новости', max_length=2000)
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     profile_image = models.ImageField('Основное изображение')
+    gallery = models.ManyToManyField('gallery.Image',
+                                     verbose_name='Галерея',
+                                     related_name='%(class)s_related',
+                                     related_query_name='%(class)s',
+                                     blank=True)
 
     class Meta:
         abstract = True
@@ -23,15 +28,12 @@ class News(Article):
         blank=True,
         default=None
     )
-    image_1 = models.ImageField('Фото 1', blank=True)
-    image_2 = models.ImageField('Фото 2', blank=True)
-    image_3 = models.ImageField('Фото 3', blank=True)
     on_main = models.BooleanField('Отображать на главной', default=False)
 
     class Meta:
         verbose_name = 'Новость'
         verbose_name_plural = 'Новости'
-        ordering = ('-pub_date', )
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.header[:10]
@@ -77,6 +79,12 @@ class StaticInfo(models.Model):
 
 
 class Vacancy(models.Model):
+    NDFL = 'ndfl'
+    NO_NDFL = 'no_ndfl'
+    PAYMENT_CHOICE = (
+        (NDFL, 'с НДФЛ'),
+        (NO_NDFL, 'На руки')
+    )
     shelter = models.ForeignKey(
         Shelter,
         verbose_name='Вакансия в приюте',
@@ -86,8 +94,24 @@ class Vacancy(models.Model):
         blank=True,
         default=None
     )
-    salary = models.CharField('Оплата', max_length=20)
-    schedule = models.CharField('Грфик работы', max_length=30)
+    salary = models.PositiveIntegerField('Оплата')
+    is_ndfl = models.CharField(
+        'Тип оплаты',
+        choices=PAYMENT_CHOICE,
+        max_length=7,
+        default=NDFL
+    )
+    education = models.ForeignKey(
+        'Education',
+        verbose_name='Образование',
+        related_name='vacancies',
+        on_delete=models.PROTECT
+    )
+    schedule = models.ManyToManyField(
+        'Schedule',
+        verbose_name='График работы',
+        related_name='vacancies'
+    )
     position = models.CharField('Доложность', max_length=30)
     description = models.TextField('Описание', max_length=500)
     pub_date = models.DateField('Дата публикации', auto_now_add=True)
@@ -96,7 +120,31 @@ class Vacancy(models.Model):
     class Meta:
         verbose_name = 'Вакансия'
         verbose_name_plural = 'Вакансии'
-        ordering = ('-pub_date', )
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.position
+
+
+class Schedule(models.Model):
+    slug = models.SlugField(primary_key=True, max_length=25)
+    name = models.CharField(max_length=25)
+
+    class Meta:
+        verbose_name = 'График работы'
+        verbose_name_plural = 'Графики работы'
+
+    def __str__(self):
+        return self.name
+
+
+class Education(models.Model):
+    slug = models.SlugField(primary_key=True, max_length=25)
+    name = models.CharField(max_length=25)
+
+    class Meta:
+        verbose_name = 'Образование'
+        verbose_name_plural = 'Образование'
+
+    def __str__(self):
+        return self.name

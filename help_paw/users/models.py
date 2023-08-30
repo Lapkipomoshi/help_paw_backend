@@ -25,14 +25,14 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     username = models.CharField(
+        'Имя пользователя',
         unique=False,
         max_length=150,
-        verbose_name='Имя пользователя',
         help_text='Введите имя пользователя',
     )
 
     status = models.CharField(
-        verbose_name='Статус',
+        'Статус',
         help_text='Выберите статус пользователя',
         max_length=50,
         choices=ROLE_CHOICES,
@@ -54,10 +54,16 @@ class User(AbstractUser):
     )
 
     email = models.EmailField(
-        verbose_name='Адрес электронной почты',
+        'Адрес электронной почты',
         unique=True,
         max_length=254,
         null=False
+    )
+    donations_sum = models.DecimalField(
+        'Сумма пожертвований',
+        max_digits=8,
+        decimal_places=2,
+        default=0
     )
 
     @property
@@ -70,7 +76,7 @@ class User(AbstractUser):
 
     @property
     def is_shelter_owner(self):
-        return self.shelter
+        return self.status == self.SHELTER_OWNER
 
     @property
     def is_user(self):
@@ -94,10 +100,6 @@ class UserPet(models.Model):
         'shelters.Pet',
         on_delete=models.CASCADE
     )
-    want_to_adopt = models.BooleanField(
-        verbose_name='Хочу приютить',
-        default=False
-    )
 
     def __str__(self):
         return f'{self.pet_subscriber} следит за судьбой: {self.pet}'
@@ -111,10 +113,6 @@ class UserShelter(models.Model):
     shelter = models.ForeignKey(
         'shelters.Shelter',
         on_delete=models.CASCADE
-    )
-    is_volunteer = models.BooleanField(
-        verbose_name='Я волонтер',
-        default=False
     )
 
     def __str__(self):
