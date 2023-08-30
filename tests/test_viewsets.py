@@ -10,9 +10,9 @@ from faker import Faker
 from info.models import News, Vacancy
 from info.serializers import (HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
-                              NewsShortSerializer, VacancyReadSerializer)
-from info.views import (MyShelterNewsViewSet, MyShelterVacancyViewSet,
-                        NewsViewSet)
+                              NewsShortSerializer, VacancyReadSerializer,
+                              EducationSerializer, ScheduleSerializer)
+from info.views import MyShelterNewsViewSet, NewsViewSet
 from shelters.models import Pet, Shelter
 from shelters.serializers import ShelterSerializer, ShelterShortSerializer
 from shelters.views import ShelterViewSet
@@ -479,16 +479,18 @@ class TestInfoViewSets:
                                                education_factory,
                                                schedule_factory):
         shelter = shelter_factory.create(owner=user)
-        education = education_factory.create()
-        schedules = schedule_factory.create_batch(3)
+
+        education = EducationSerializer(education_factory.build())
+        schedule = ScheduleSerializer(schedule_factory.build())
 
         url = self.endpoint + f'my-shelter/vacancies/'
+
         payload = factory.build(
             dict,
             FACTORY_CLASS=vacancy_factory,
             shelter=None,
-            education=education.slug,
-            schedule=[val.slug for val in schedules]
+            education=education.data,
+            schedule=[schedule.data, ]
         )
 
         request = rf.post(
@@ -501,6 +503,7 @@ class TestInfoViewSets:
         serializer = VacancyReadSerializer(data=payload,
                                            context={'request': request})
         assert serializer.is_valid()
+
         # FIXME
         # serializer.save()
         #

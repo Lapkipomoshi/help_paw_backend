@@ -5,6 +5,11 @@ import pytest
 from faker import Faker
 from info.serializers import HelpArticleSerializer
 from shelters.serializers import ShelterSerializer
+from gallery.models import MAX_IMAGE_SIZE
+from django.core.files.uploadedfile import SimpleUploadedFile
+from tests.plugins.methods import get_image_data
+from rest_framework.exceptions import ValidationError
+from gallery.serializers import ImageValidator
 
 fake = Faker()
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -13,7 +18,6 @@ pytestmark = pytest.mark.django_db(transaction=True)
 class TestSerializers:
 
     def test_help_article_serializer(self, help_article_factory):
-
         must_fail_header = '666'
         valid_header = 'ABC'
 
@@ -78,3 +82,25 @@ class TestSerializers:
         serializer = ShelterSerializer(data=payload,
                                        context={'request': request})
         assert serializer.is_valid()
+
+    def test_gallery_image_validator(self):
+        validator = ImageValidator()
+
+        target_size = MAX_IMAGE_SIZE + 1
+        bytes_data = get_image_data(target_size)
+
+        big_image = SimpleUploadedFile(name='test_image.jpg',
+                                       content=bytes_data)
+        data = {'image': big_image}
+
+        with pytest.raises(ValidationError):
+            validator(data)
+
+        target_size = 1000
+        bytes_data = get_image_data(target_size)
+
+        small_image = SimpleUploadedFile(name='test_image.jpg',
+                                         content=bytes_data)
+        data = {'image': small_image}
+
+        assert validator(data) is None
