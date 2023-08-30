@@ -39,7 +39,7 @@ DEBUG = (os.getenv('DEBUG', default='True') == 'True')
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
-    ALLOWED_HOSTS = ['https://lapkipomoshi.ru/', 'https://89.108.79.31/']
+    ALLOWED_HOSTS = ['.lapkipomoshi.ru', '89.108.79.31']
 
 # Application definition
 
