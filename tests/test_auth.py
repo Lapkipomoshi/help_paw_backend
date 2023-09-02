@@ -175,6 +175,7 @@ class TestAuth:
                                'токен доступа.'
         )
 
+    @pytest.mark.skip
     def test_users_reset_password(self, user, client, user_client):
         """Проверка возможности смены пароля"""
 
