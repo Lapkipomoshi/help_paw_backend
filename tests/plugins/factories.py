@@ -10,6 +10,8 @@ from info.models import (FAQ, Education, HelpArticle, News, Schedule,
 from PIL import Image
 from shelters.models import AnimalType, Pet, Shelter, Task
 from users.models import User, UserPet, UserShelter
+from gallery.models import Image as Img
+
 
 fake = Faker()
 
@@ -112,8 +114,13 @@ class TaskFactory(factory.django.DjangoModelFactory):
     shelter = factory.SubFactory(ShelterFactory)
     name = fake.name()
     description = fake.text()
-    # is_emergency = False
-    # is_finished = False
+
+
+class GalleryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Img
+
+    image = factory.django.ImageField(color='blue')
 
 
 class NewsFactory(factory.django.DjangoModelFactory):
@@ -126,6 +133,15 @@ class NewsFactory(factory.django.DjangoModelFactory):
     on_main = True
     profile_image = ''
 
+    @factory.post_generation
+    def gallery(self, create, extracted):
+        if not create:
+            return
+
+        if extracted:
+            for image in extracted:
+                self.gallery.add(image)
+
 
 class HelpArticleFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -135,6 +151,15 @@ class HelpArticleFactory(factory.django.DjangoModelFactory):
     text = fake.text()
     source = fake.url()
     profile_image = ''
+
+    @factory.post_generation
+    def gallery(self, create, extracted):
+        if not create:
+            return
+
+        if extracted:
+            for image in extracted:
+                self.gallery.add(image)
 
 
 class FAQFactory(factory.django.DjangoModelFactory):
