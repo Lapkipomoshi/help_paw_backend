@@ -27,10 +27,8 @@ class ArticleViewSet(viewsets.ModelViewSet):
         for image in instance.gallery.all():
             if isinstance(self, HelpArticleViewSet):
                 objects = image.helparticle_related.all()
-            elif isinstance(self, NewsViewSet):
-                objects = image.news_related.all()
             else:
-                raise NotImplementedError('Неподдерживаемый вьюсет')
+                objects = image.news_related.all()
 
             if len(objects) == 1 and objects[0] == instance:
                 image.delete()
