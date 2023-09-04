@@ -7,11 +7,12 @@ from chat.serializers import (ChatListSerializer, ChatSerializer,
                               MessageSerializer)
 from chat.views import MessageViewSet
 from faker import Faker
+from gallery.models import Image
 from info.models import News, Vacancy
 from info.serializers import (HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
-                              NewsShortSerializer, VacancyReadSerializer,
-                              EducationSerializer, ScheduleSerializer)
+                              NewsShortSerializer, VacancyWriteSerializer,
+                              VacancyReadSerializer)
 from info.views import (MyShelterNewsViewSet, NewsViewSet,
                         MyShelterVacancyViewSet)
 from shelters.models import Pet, Shelter
@@ -475,15 +476,13 @@ class TestInfoViewSets:
         assert response.status_code == 200
         assert len(json.loads(response.content)) == 1
 
-    @pytest.mark.skip
     def test_my_shelter_vacancy_vacancy_create(self, rf, user, vacancy_factory,
                                                shelter_factory,
                                                education_factory,
                                                schedule_factory):
         shelter = shelter_factory.create(owner=user)
-
-        education = EducationSerializer(education_factory.build())
-        schedule = ScheduleSerializer(schedule_factory.build())
+        education = education_factory.create()
+        schedule = schedule_factory.create()
 
         url = self.endpoint + f'my-shelter/vacancies/'
 
@@ -491,8 +490,8 @@ class TestInfoViewSets:
             dict,
             FACTORY_CLASS=vacancy_factory,
             shelter=None,
-            education=education.data,
-            schedule=[schedule.data, ]
+            education=education.slug,
+            schedule=[schedule.slug, ]
         )
 
         request = rf.post(
@@ -502,8 +501,8 @@ class TestInfoViewSets:
         )
         request.user = user
 
-        serializer = VacancyReadSerializer(data=payload,
-                                           context={'request': request})
+        serializer = VacancyWriteSerializer(data=payload,
+                                            context={'request': request})
         assert serializer.is_valid()
 
         serializer.save()
@@ -513,3 +512,49 @@ class TestInfoViewSets:
 
         my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
         assert my_vac.shelter == shelter
+
+    def test_vacancy_get_serializer(self, admin, api_client, vacancy_factory,
+                                    education_factory,
+                                    schedule_factory):
+
+        url = self.endpoint + 'vacancies/'
+        vacancy_factory.create()
+        response = api_client.get(url)
+
+        assert response.status_code == 200
+        assert isinstance(response.data.serializer.child,
+                          VacancyReadSerializer)
+
+        education = education_factory.create()
+        schedule = schedule_factory.create()
+
+        payload = factory.build(
+            dict,
+            FACTORY_CLASS=vacancy_factory,
+            education=education.slug,
+            schedule=[schedule.slug, ]
+        )
+        api_client.force_authenticate(admin)
+        response = api_client.post(url, payload)
+
+        assert response.status_code == 201
+        assert isinstance(response.data.serializer,
+                          VacancyWriteSerializer)
+
+    @pytest.mark.parametrize('url', ['help-articles/', 'news/'])
+    def test_help_article_news_factory_destroy(self, url, admin, api_client,
+                                               help_article_factory,
+                                               news_factory,
+                                               gallery_factory):
+
+        my_factory = news_factory if url == 'news/' else help_article_factory
+
+        my_gallery = gallery_factory.create_batch(3)
+        assert Image.objects.count() == 3
+
+        my_obj = my_factory.create(gallery=my_gallery)
+
+        api_client.force_authenticate(admin)
+        api_client.delete(f'{self.endpoint}{url}{my_obj.pk}/')
+
+        assert Image.objects.count() == 0

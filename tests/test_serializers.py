@@ -126,7 +126,3 @@ class TestSerializers:
         serializer = EmailSerializer(data=payload,
                                      context={'request': request})
         assert serializer.is_valid()
-
-    @pytest.mark.skip
-    def test_email_reset_confirm_serializer(self):
-        pass
