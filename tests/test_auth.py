@@ -34,12 +34,12 @@ class TestAuth:
         if len(urls) == 0:
             return result
 
-        url = urls[0]
+        suitable_urls = [url for url in urls if url.find(sep) != -1]
 
-        if url.find(sep) == -1:
+        if len(suitable_urls) == 0:
             return result
 
-        params = url.split(sep)
+        params = suitable_urls[0].split(sep)
         result = params[1].split('/')
 
         return result
@@ -98,7 +98,6 @@ class TestAuth:
                                'активации аккаунта.'
         )
 
-    @pytest.mark.skip
     def test_user_activation(self, client, new_user_data):
         """
         Проверка активации юзера по ссылке из письма, отправленного на email.
@@ -129,9 +128,7 @@ class TestAuth:
             'настройки Djoser.'
         )
 
-    @pytest.mark.skip
-    def test_jwt_token_create_refresh_verify(self, client,
-                                             new_user_data):
+    def test_jwt_token_create_refresh_verify(self, client, new_user_data):
         """
         Проверка получения токена для нового пользователя,
         верификация и обновление токена.
@@ -144,9 +141,17 @@ class TestAuth:
             f'Проверьте, что при POST-запросе на энд-пойнт {url_jwt_create} '
         )
 
+        client.post(url_signup, new_user_data)
+        params = self.get_params_from_text(mail.outbox[0].body, 'activate/')
+
+        payload = {
+            'uid': params[0],
+            'token': params[1]
+        }
+
+        client.post(url_activation, payload)
         response = client.post(url_jwt_create, new_user_data)
 
-        # FIXME
         assert response.status_code == status.HTTP_200_OK, (
                 warning_text + 'создается новый токен доступа.'
         )
@@ -175,7 +180,6 @@ class TestAuth:
                                'токен доступа.'
         )
 
-    @pytest.mark.skip
     def test_users_reset_password(self, user, client, user_client):
         """Проверка возможности смены пароля"""
 
@@ -213,76 +217,6 @@ class TestAuth:
         assert new_client.login(email=user.email, password=new_passport), (
                 warning_text + f'{url_confirm} изменяется пароль пользователя.'
         )
-
-    @pytest.mark.skip
-    def test_users_reset_username(self, user, api_client):
-        """Проверка возможности смены логина"""
-        url_reset = '/api/auth/users/reset_email/'
-        url_confirm = '/api/auth/users/reset_email_confirm/'
-        warning_text = 'Проверьте, что при POST-запросе на энд-пойнт '
-
-        new_email = 'changed_email@helppaw.fake'
-        payload = {'email': new_email}
-
-        api_client.force_authenticate(user=user)
-
-        response = api_client.post(url_reset, payload)
-        outbox = mail.outbox
-
-        assert (response.status_code == status.HTTP_204_NO_CONTENT and len(
-            outbox) == 1), (
-                warning_text + f'{url_reset} возвращается статус 204 и '
-                               f'пользователю отправляется письмо со ссылкой '
-                               f'для смены e-mail.'
-        )
-
-        params = self.get_params_from_text(outbox[0].body, 'email-reset/')
-
-        payload = {
-            'uid': params[0],
-            'token': params[1],
-            'new_email': params[2]
-        }
-        response = api_client.post(url_confirm, payload)
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT, (
-                warning_text + f'{url_confirm}  возвращается статус 204.'
-        )
-
-    @pytest.mark.skip
-    def test_users_reset_username_not_valid(self, user, api_client, rf):
-        """Проверка возможности смены логина, ошибка валидации."""
-        url_reset = '/api/auth/users/reset_email/'
-        url_confirm = '/api/auth/users/reset_email_confirm/'
-
-        new_email = 'changed_email@helppaw.fake'
-        payload = {'email': new_email}
-
-        api_client.force_authenticate(user=user)
-
-        api_client.post(url_reset, payload)
-        outbox = mail.outbox
-        params = self.get_params_from_text(outbox[0].body, 'email-reset/')
-
-        request = rf.post(
-            url_confirm,
-            content_type='application/json',
-        )
-
-        context = {
-            'view': CustomUserViewSet(),
-            'request': request
-        }
-        payload = {
-            'uid': params[0],
-            'token': params[1],
-            'new_email': 'not_valid'
-        }
-
-        serializer = EmailResetConfirmSerializer(context=context, data=payload)
-
-        with pytest.raises(ValidationError):
-            serializer.get_new_email(payload)
 
     def test_users_update(self, user, user_client, new_user_data):
         """
@@ -323,3 +257,69 @@ class TestAuth:
             f'пользователя, email которого уже зарегистрирован и возвращается '
             f'статус {code}'
         )
+
+    def test_users_reset_username(self, user_client):
+        """Проверка возможности смены логина"""
+        url_reset = '/api/auth/users/reset_email/'
+        url_confirm = '/api/auth/users/reset_email_confirm/'
+        warning_text = 'Проверьте, что при POST-запросе на энд-пойнт '
+
+        payload = {
+            'email': 'changed_email@helppaw.fake'
+        }
+        response = user_client.post(url_reset, payload)
+
+        outbox = mail.outbox
+
+        assert (response.status_code == status.HTTP_204_NO_CONTENT and len(
+            outbox) == 1), (
+                warning_text + f'{url_reset} возвращается статус 204 и '
+                               f'пользователю отправляется письмо со ссылкой '
+                               f'для смены e-mail.'
+        )
+
+        params = self.get_params_from_text(outbox[0].body, 'email-reset/')
+
+        payload = {
+            'uid': params[0],
+            'token': params[1],
+            'new_email': params[2]
+        }
+        response = user_client.post(url_confirm, payload)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT, (
+                warning_text + f'{url_confirm}  возвращается статус 204.'
+        )
+
+    def test_users_reset_username_not_valid(self, user_client, rf):
+        """Проверка возможности смены логина, ошибка валидации."""
+        url_reset = '/api/auth/users/reset_email/'
+        url_confirm = '/api/auth/users/reset_email_confirm/'
+
+        payload = {
+            'email': 'changed_email@helppaw.fake'
+        }
+
+        user_client.post(url_reset, payload)
+        outbox = mail.outbox
+        params = self.get_params_from_text(outbox[0].body, 'email-reset/')
+
+        request = rf.post(
+            url_confirm,
+            content_type='application/json',
+        )
+
+        context = {
+            'view': CustomUserViewSet(),
+            'request': request
+        }
+        payload = {
+            'uid': params[0],
+            'token': params[1],
+            'new_email': 'not_valid'
+        }
+
+        serializer = EmailResetConfirmSerializer(context=context, data=payload)
+
+        with pytest.raises(ValidationError):
+            serializer.get_new_email(payload)

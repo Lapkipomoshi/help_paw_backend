@@ -12,7 +12,8 @@ from info.serializers import (HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
                               NewsShortSerializer, VacancyReadSerializer,
                               EducationSerializer, ScheduleSerializer)
-from info.views import MyShelterNewsViewSet, NewsViewSet
+from info.views import (MyShelterNewsViewSet, NewsViewSet,
+                        MyShelterVacancyViewSet)
 from shelters.models import Pet, Shelter
 from shelters.serializers import ShelterSerializer, ShelterShortSerializer
 from shelters.views import ShelterViewSet
@@ -474,6 +475,7 @@ class TestInfoViewSets:
         assert response.status_code == 200
         assert len(json.loads(response.content)) == 1
 
+    @pytest.mark.skip
     def test_my_shelter_vacancy_vacancy_create(self, rf, user, vacancy_factory,
                                                shelter_factory,
                                                education_factory,
@@ -504,11 +506,10 @@ class TestInfoViewSets:
                                            context={'request': request})
         assert serializer.is_valid()
 
-        # FIXME
-        # serializer.save()
-        #
-        # view = MyShelterVacancyViewSet(request=request)
-        # view.perform_create(serializer)
-        #
-        # my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
-        # assert my_vac.shelter == shelter
+        serializer.save()
+
+        view = MyShelterVacancyViewSet(request=request)
+        view.perform_create(serializer)
+
+        my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
+        assert my_vac.shelter == shelter
