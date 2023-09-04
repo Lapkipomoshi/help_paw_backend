@@ -50,4 +50,5 @@ class EmailSerializer(serializers.Serializer):
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError(
-                'Пользователь с таким email уже существуте')
+                'Пользователь с таким email уже существует')
+        return value

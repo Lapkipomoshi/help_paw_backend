@@ -5,6 +5,7 @@ import pytest
 from faker import Faker
 from info.serializers import HelpArticleSerializer
 from shelters.serializers import ShelterSerializer
+from users.serializers import EmailSerializer
 from gallery.models import MAX_IMAGE_SIZE
 from django.core.files.uploadedfile import SimpleUploadedFile
 from tests.plugins.methods import get_image_data
@@ -104,3 +105,28 @@ class TestSerializers:
         data = {'image': small_image}
 
         assert validator(data) is None
+
+    def test_email_serializer(self, client, new_user_data):
+        url_signup = '/api/auth/users/'
+        request = client.post(url_signup, new_user_data)
+
+        payload = {
+            'email': new_user_data.get('email')
+        }
+
+        serializer = EmailSerializer(data=payload,
+                                     context={'request': request})
+
+        assert not serializer.is_valid()
+
+        payload = {
+            'email': 'other_user@helppaw.fake'
+        }
+
+        serializer = EmailSerializer(data=payload,
+                                     context={'request': request})
+        assert serializer.is_valid()
+
+    @pytest.mark.skip
+    def test_email_reset_confirm_serializer(self):
+        pass
