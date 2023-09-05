@@ -272,6 +272,24 @@ class TestSheltersViewSets:
         assert response.status_code == 200
         assert len(json.loads(response.content)) == count
 
+    def test_shelter_toggle_is_favourite(self, user, api_client,
+                                         shelter_factory):
+
+        my_shelter = shelter_factory.create()
+        api_client.force_authenticate(user)
+        response = api_client.post(
+            self.endpoint + f'shelters/{my_shelter.pk}/favourite/')
+
+        assert response.status_code == 204
+        assert user.subscription_shelter.count() == 1
+
+        api_client.force_authenticate(user)
+        response = api_client.delete(
+            self.endpoint + f'shelters/{my_shelter.pk}/favourite/')
+
+        assert response.status_code == 204
+        assert user.subscription_shelter.count() == 0
+
 
 class TestInfoViewSets:
     endpoint = '/api/v1/'
