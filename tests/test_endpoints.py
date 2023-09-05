@@ -115,16 +115,14 @@ class TestAnimalTypesEndpoint:
         assert response.status_code == 200
         assert set(response.data[0].keys()) == {'name', 'slug'}
 
-    # пока пропускаем, до выяснения про POST для анонимов
-    @pytest.mark.skip
-    # @pytest.mark.django_db
+    @pytest.mark.django_db
     def test_post_animal_types(self, client):
         """Проверяем, что работает только GET-запрос"""
         data = {"name": "попугай", "slug": "parrot"}
-        assert client.post(self.endpoint, data).status_code == 405
-        assert client.put(self.endpoint, data).status_code == 405
-        assert client.patch(self.endpoint, data).status_code == 405
-        assert client.delete(self.endpoint).status_code == 405
+        assert client.post(self.endpoint, data).status_code == 401
+        assert client.put(self.endpoint, data).status_code == 401
+        assert client.patch(self.endpoint, data).status_code == 401
+        assert client.delete(self.endpoint).status_code == 401
 
 
 class TestChatsEndpoint:

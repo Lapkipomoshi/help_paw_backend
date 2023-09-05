@@ -4,6 +4,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from api.permissions import (AuthenticatedAllowToPost, IsAdminModerOrReadOnly,
                              IsShelterOwner)
@@ -59,11 +60,13 @@ class ShelterViewSet(viewsets.ModelViewSet):
     def start_chat(self, request, pk):
         """Создание чата с приютом, или получение уже имеющегося чата"""
         shelter = get_object_or_404(Shelter, id=pk)
-        chat, _ = Chat.objects.get_or_create(shelter=shelter, user=request.user)
+        chat, _ = Chat.objects.get_or_create(shelter=shelter,
+                                             user=request.user)
         serializer = self.get_serializer(chat)
         return Response(serializer.data)
 
-    @action(detail=True, methods=('post', 'delete',), url_path='favourite')
+    @action(detail=True, methods=('post', 'delete',), url_path='favourite',
+            permission_classes=[IsAuthenticated])
     def toggle_is_favourite(self, request, pk):
         """Добавление/удаление приюта из избранного"""
         shelter = get_object_or_404(Shelter, id=pk)
