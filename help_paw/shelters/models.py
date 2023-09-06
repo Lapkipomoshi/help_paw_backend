@@ -35,7 +35,7 @@ class Pet(models.Model):
         choices=SEX_CHOICE,
         default=OTHER
     )
-    birth_date = models.DateField(null=True, blank=True)
+    birth_date = models.DateField('Дата рождения')
     about = models.TextField('Описание животного', max_length=500)
     gallery = models.ManyToManyField(
         'gallery.Image',
