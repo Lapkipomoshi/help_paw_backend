@@ -30,8 +30,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
                 'id', 'name', 'address', 'working_from_hour',
                 'working_to_hour', 'logo', 'profile_image', 'long', 'lat'
             )
-        else:
-            return Shelter.approved.annotate(
+        return Shelter.approved.annotate(
                 count_vacancies=Count('vacancy'),
                 count_pets=Count('pets'),
                 count_news=Count('news'),
@@ -43,8 +42,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
             return ShelterShortSerializer
         if self.action == 'start_chat':
             return ChatSerializer
-        else:
-            return ShelterSerializer
+        return ShelterSerializer
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -105,9 +103,8 @@ class PetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         shelter_id = self.kwargs.get('shelter_id')
-        if shelter_id:
-            shelter = get_object_or_404(Shelter, id=shelter_id)
-            return Pet.objects.filter(shelter=shelter, is_adopted=False)
+        shelter = get_object_or_404(Shelter, id=shelter_id)
+        return Pet.objects.filter(shelter=shelter, is_adopted=False)
 
 
 class MyShelterPetViewSet(PetViewSet):

@@ -43,7 +43,7 @@ class VacancyWriteSerializer(VacancyReadSerializer):
 
 class ArticleSerializer(serializers.ModelSerializer):
     profile_image = Base64ImageField()
-    pub_date = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
+    pub_date = serializers.DateTimeField(read_only=True, format='%d.%m.%Y')
     gallery = ImageSerializer(many=True, required=False,
                               validators=[ImageValidator()])
 
