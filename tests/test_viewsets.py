@@ -210,7 +210,8 @@ class TestSheltersViewSets:
 
         assert owner_before != my_shelter.owner
 
-    def test_pet_adopt(self, user, api_client, pet_factory, shelter_factory):
+    def test_my_shelter_pet_adopt(self, user, api_client, pet_factory,
+                                  shelter_factory):
         my_shelter = shelter_factory(owner=user)
         my_pet = pet_factory.create(shelter=my_shelter, is_adopted=False)
 
@@ -225,9 +226,23 @@ class TestSheltersViewSets:
 
         assert reread_pet.is_adopted
 
+    def test_my_shelter_pet_get_queryset(self, user, api_client, pet_factory,
+                                         shelter_factory):
+        my_shelter = shelter_factory(owner=user)
+        my_pet = pet_factory.create(shelter=my_shelter)
+        pet_factory.create_batch(3)
+
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(self.endpoint + f'my-shelter/pets/')
+
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert my_pet.name == response.data[0].get('name')
+
     def test_news_create(self, rf, news_factory, user):
 
-        url = self.endpoint + f'news/'
+        url = self.endpoint + 'news/'
 
         payload = factory.build(
             dict,
@@ -261,8 +276,9 @@ class TestSheltersViewSets:
                               ('shelters/?warnings=yellow', 2),
                               ('shelters/?warnings=green', 1)]
                              )
-    def test_shelter_filters(self, url, count, task_factory, shelter_factory,
-                             api_client):
+    def test_shelter_filters_get_by_colour(self, url, count, task_factory,
+                                           shelter_factory,
+                                           api_client):
         task_factory.create_batch(3, is_emergency=True)
         task_factory.create_batch(2)
         shelter_factory.create()
@@ -289,6 +305,65 @@ class TestSheltersViewSets:
 
         assert response.status_code == 204
         assert user.subscription_shelter.count() == 0
+
+    def test_shelter_filters_get_favourite(self, user, api_client,
+                                           shelter_factory):
+        shelter_factory.create_batch(3)
+        my_shelter = shelter_factory.create()
+        api_client.force_authenticate(user)
+
+        response = api_client.get(
+            self.endpoint + 'shelters/?is_favourite=False')
+
+        assert response.status_code == 200
+        assert len(response.data) == 4
+
+        response = api_client.get(
+            self.endpoint + 'shelters/?is_favourite=True')
+
+        assert response.status_code == 200
+        assert len(response.data) == 0
+
+        api_client.post(
+            self.endpoint + f'shelters/{my_shelter.pk}/favourite/')
+
+        response = api_client.get(
+            self.endpoint + 'shelters/?is_favourite=True')
+
+        assert response.status_code == 200
+        assert response.data[0].get('id') == my_shelter.id
+        assert len(response.data) == 1
+
+    @pytest.mark.skip
+    def test_shelter_filters_get_helped(self):
+        pass
+
+    def test_my_shelter_get_object(self, user, api_client, shelter_factory):
+
+        shelter_factory.create_batch(3)
+        my_shelter = shelter_factory.create(owner=user)
+
+        api_client.force_authenticate(user)
+
+        response = api_client.get(self.endpoint + 'my-shelter/0/')
+
+        assert response.status_code == 200
+        assert response.data.get('id') == my_shelter.id
+
+    def test_my_shelter_get_perform_destroy(self, user, api_client,
+                                            shelter_factory):
+
+        approved = shelter_factory.create(owner=user)
+        api_client.force_authenticate(user)
+        response = api_client.delete(self.endpoint + 'my-shelter/0/')
+
+        assert response.status_code == 204
+        assert not approved.is_approved
+
+        response = api_client.delete(self.endpoint + 'my-shelter/0/')
+
+        assert response.status_code == 204
+        assert Shelter.objects.count() == 0
 
 
 class TestInfoViewSets:
