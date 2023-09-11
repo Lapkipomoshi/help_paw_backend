@@ -11,10 +11,10 @@ from gallery.models import Image
 from info.models import News, Vacancy
 from info.serializers import (HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
-                              NewsShortSerializer, VacancyWriteSerializer,
-                              VacancyReadSerializer)
-from info.views import (MyShelterNewsViewSet, NewsViewSet,
-                        MyShelterVacancyViewSet)
+                              NewsShortSerializer, VacancyReadSerializer,
+                              VacancyWriteSerializer)
+from info.views import (MyShelterNewsViewSet, MyShelterVacancyViewSet,
+                        NewsViewSet)
 from shelters.models import Pet, Shelter
 from shelters.serializers import ShelterSerializer, ShelterShortSerializer
 from shelters.views import ShelterViewSet

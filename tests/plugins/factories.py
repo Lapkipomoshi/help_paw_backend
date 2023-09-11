@@ -5,13 +5,12 @@ import factory
 from chat.models import Chat, Message
 from django.core.files.uploadedfile import SimpleUploadedFile
 from faker import Faker
+from gallery.models import Image as Img
 from info.models import (FAQ, Education, HelpArticle, News, Schedule,
                          StaticInfo, Vacancy)
 from PIL import Image
 from shelters.models import AnimalType, Pet, Shelter, Task
 from users.models import User, UserPet, UserShelter
-from gallery.models import Image as Img
-
 
 fake = Faker()
 

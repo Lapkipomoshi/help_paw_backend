@@ -2,12 +2,12 @@ from pytest_factoryboy import register
 
 from tests.plugins.factories import (AnimalTypeFactory, ChatFactory,
                                      EducationFactory, FAQFactory,
-                                     HelpArticleFactory, MessageFactory,
-                                     NewsFactory, PetFactory, ScheduleFactory,
-                                     ShelterFactory, StaticInfoFactory,
-                                     TaskFactory, UserFactory, UserPetFactory,
-                                     UserShelterFactory, VacancyFactory,
-                                     GalleryFactory)
+                                     GalleryFactory, HelpArticleFactory,
+                                     MessageFactory, NewsFactory, PetFactory,
+                                     ScheduleFactory, ShelterFactory,
+                                     StaticInfoFactory, TaskFactory,
+                                     UserFactory, UserPetFactory,
+                                     UserShelterFactory, VacancyFactory)
 
 register(NewsFactory)
 register(HelpArticleFactory)

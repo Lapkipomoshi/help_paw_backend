@@ -3,9 +3,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from faker import Faker
-from info.models import News
 from gallery.models import MAX_IMAGE_CNT, MAX_IMAGE_SIZE, Image
+from info.models import News
 from shelters.models import Shelter
+
 from tests.plugins.methods import get_image_data
 
 pytestmark = pytest.mark.django_db(transaction=True)
