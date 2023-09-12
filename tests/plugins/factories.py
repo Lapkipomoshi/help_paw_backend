@@ -100,7 +100,9 @@ class PetFactory(factory.django.DjangoModelFactory):
     name = fake.name()
     animal_type = factory.SubFactory(AnimalTypeFactory)
     sex = 'other'
+    breed = 'dog'
     birth_date = fake.date()
+    admission_date = fake.date()
     about = fake.text()
     is_adopted = fake.boolean()
     shelter = factory.SubFactory(ShelterFactory)
