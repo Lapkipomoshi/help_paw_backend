@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -14,6 +15,8 @@ from shelters.filters import PetFilter, SheltersFilter
 from shelters.models import AnimalType, Pet, Shelter
 from shelters.serializers import (AnimalTypeSerializer, PetSerializer,
                                   ShelterSerializer, ShelterShortSerializer)
+
+User = get_user_model()
 
 
 class ShelterViewSet(viewsets.ModelViewSet):
@@ -46,6 +49,8 @@ class ShelterViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
+        user.status = User.SHELTER_OWNER
+        user.save()
         serializer.save(owner=user)
 
     @action(detail=False, methods=('get',), url_path='on-main')
@@ -90,6 +95,9 @@ class MyShelterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             instance.is_approved = False
             instance.save()
         else:
+            user = self.request.user
+            user.status = User.USER
+            user.save()
             super().perform_destroy(instance)
 
 
