@@ -91,10 +91,14 @@ class MyShelterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         return self.request.user.shelter
 
     def perform_destroy(self, instance):
-        user = self.request.user
-        user.status = User.USER
-        user.save()
-        super().perform_destroy(instance)
+        if instance.is_approved:
+            instance.is_approved = False
+            instance.save()
+        else:
+            user = self.request.user
+            user.status = User.USER
+            user.save()
+            super().perform_destroy(instance)
 
 
 class PetViewSet(viewsets.ModelViewSet):
