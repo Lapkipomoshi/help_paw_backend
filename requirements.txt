@@ -25,3 +25,4 @@ pytest-factoryboy==2.5.1
 coverage==7.2.5
 PyJWT==2.6.0
 django-extensions==3.2.3
+yookassa==2.5.0
