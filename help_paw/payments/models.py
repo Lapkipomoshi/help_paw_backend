@@ -1,8 +1,7 @@
-from datetime import datetime
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from shelters.models import Shelter
 
@@ -16,16 +15,16 @@ class YookassaOAuthToken(models.Model):
         verbose_name='Приют',
         on_delete=models.CASCADE,
         related_name='yookassa_token')
-    token = models.CharField('Токен', max_length=255)
-    expires_at = models.DateTimeField('Дата истекания')
+    token = models.CharField('Токен', max_length=512)
+    expires_at = models.DateTimeField('Дата истечения')
 
     @property
     def is_expired(self) -> bool:
-        return datetime.now() > self.expires_at
+        return timezone.now() > self.expires_at
 
 
-class Payment(models.Model):
-    """Данные о платеже"""
+class Donation(models.Model):
+    """Данные о пожертвовании"""
     shelter = models.ForeignKey(
         Shelter,
         verbose_name='Приют',
@@ -40,6 +39,18 @@ class Payment(models.Model):
         related_name='payments',
         null=True
     )
-    amount = models.FloatField('Сумма', validators=[MinValueValidator(1.0)])
-    is_successful = models.BooleanField('Завершен успешно', default=False)
-    external_id = models.CharField('Внешний ID платежа', max_length=255, unique=True)
+    amount = models.DecimalField(
+        'Сумма',
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(1.0)]
+    )
+    is_successful = models.BooleanField(
+        'Завершен успешно',
+        default=False
+    )
+    external_id = models.CharField(
+        'Внешний ID платежа',
+        max_length=255,
+        unique=True
+    )

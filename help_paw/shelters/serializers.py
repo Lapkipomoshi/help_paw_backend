@@ -34,10 +34,10 @@ class ShelterShortSerializer(serializers.ModelSerializer):
         model = Shelter
 
     # TODO Add logic when algorithm invented
-    def get_warning(self, obj):
+    def get_warning(self, obj) -> str:
         return 'yellow'
 
-    def get_is_favourite(self, obj):
+    def get_is_favourite(self, obj) -> bool:
         user = self.context['request'].user
         return obj.subscribers.filter(id=user.id).exists()
 
@@ -67,13 +67,13 @@ class ShelterSerializer(serializers.ModelSerializer):
         model = Shelter
 
     # TODO Add logic when payment added
-    def get_money_collected(self, obj):
+    def get_money_collected(self, obj) -> float:
         return 0
 
-    def get_animals_adopted(self, obj):
+    def get_animals_adopted(self, obj) -> int:
         return obj.pets.filter(is_adopted=True).count()
 
-    def get_is_favourite(self, obj):
+    def get_is_favourite(self, obj) -> bool:
         user = self.context['request'].user
         return obj.subscribers.filter(id=user.id).exists()
 
@@ -109,10 +109,10 @@ class PetSerializer(serializers.ModelSerializer):
         )
         model = Pet
 
-    def get_sheltering_time(self, obj):
+    def get_sheltering_time(self, obj) -> int:
         duration = dt.date.today() - obj.admission_date
         return int(duration.days / 365)
 
-    def get_age(self, obj):
+    def get_age(self, obj) -> int:
         duration = dt.date.today() - obj.birth_date
         return int(duration.days / 365)

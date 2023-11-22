@@ -1,5 +1,9 @@
 from rest_framework import serializers
 
+from payments.models import Donation
 
-class DonateSerializer(serializers.Serializer):
-    amount = serializers.FloatField(required=True, min_value=1.0)
+
+class DonateSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('amount',)
+        model = Donation
