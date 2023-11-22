@@ -27,9 +27,7 @@ class CustomUserViewSet(UserViewSet):
     def create_reset_email_token(email):
         exp = datetime.datetime.utcnow() + datetime.timedelta(days=2)
         data = {'email': email, 'exp': exp}
-        token = jwt.encode(payload=data, key=settings.SECRET_KEY,
-                           algorithm='HS256')
-        return token
+        return jwt.encode(payload=data, key=settings.SECRET_KEY, algorithm='HS256')
 
     @action(["post"], detail=False,
             url_path="reset_{}".format(User.USERNAME_FIELD))

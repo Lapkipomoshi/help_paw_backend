@@ -13,7 +13,7 @@ User = get_user_model()
 class EmailResetConfirmSerializer(UidAndTokenSerializer):
     new_email = serializers.SerializerMethodField()
 
-    def get_new_email(self, obj):
+    def get_new_email(self, obj) -> str:
         try:
             decode = jwt.decode(
                 self.initial_data['new_email'],

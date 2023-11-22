@@ -4,8 +4,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from api.permissions import (AuthenticatedAllowToPost, IsAdminModerOrReadOnly,
                              IsShelterOwner)
@@ -87,6 +87,9 @@ class MyShelterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     permission_classes = (IsShelterOwner,)
     serializer_class = ShelterSerializer
 
+    def get_queryset(self):
+        return Shelter.objects.get(owner=self.request.user)
+
     def get_object(self):
         return self.request.user.shelter
 
@@ -121,8 +124,7 @@ class MyShelterPetViewSet(PetViewSet):
     permission_classes = (IsShelterOwner,)
 
     def get_queryset(self):
-        shelter = self.request.user.shelter
-        return Pet.objects.filter(shelter=shelter)
+        return Pet.objects.filter(shelter=self.request.user.shelter)
 
     @action(detail=True, methods=('patch',), url_path='adopt')
     def toggle_adopt(self, request, pk):
