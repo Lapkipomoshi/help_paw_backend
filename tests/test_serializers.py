@@ -1,15 +1,18 @@
+import base64
 import json
 
 import factory
 import pytest
-from faker import Faker
-from info.serializers import HelpArticleSerializer
-from shelters.serializers import ShelterSerializer
-from gallery.models import MAX_IMAGE_SIZE
 from django.core.files.uploadedfile import SimpleUploadedFile
-from tests.plugins.methods import get_image_data
-from rest_framework.exceptions import ValidationError
+from faker import Faker
+from gallery.models import MAX_IMAGE_CNT, MAX_IMAGE_SIZE
 from gallery.serializers import ImageValidator
+from info.serializers import HelpArticleSerializer, NewsSerializer
+from rest_framework.exceptions import ValidationError
+from shelters.serializers import ShelterSerializer
+from users.serializers import EmailSerializer
+
+from tests.plugins.methods import get_image_data
 
 fake = Faker()
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -104,3 +107,69 @@ class TestSerializers:
         data = {'image': small_image}
 
         assert validator(data) is None
+
+    def test_email_serializer(self, client, new_user_data):
+        url_signup = '/api/auth/users/'
+        request = client.post(url_signup, new_user_data)
+
+        payload = {
+            'email': new_user_data.get('email')
+        }
+
+        serializer = EmailSerializer(data=payload,
+                                     context={'request': request})
+
+        assert not serializer.is_valid()
+
+        payload = {
+            'email': 'other_user@helppaw.fake'
+        }
+
+        serializer = EmailSerializer(data=payload,
+                                     context={'request': request})
+        assert serializer.is_valid()
+
+    def test_article_validate(self, news_factory):
+        image_data = {
+            'image': base64.b64encode(get_image_data()).decode('utf-8')
+        }
+
+        payload = factory.build(
+            dict,
+            FACTORY_CLASS=news_factory,
+            gallery=[image_data] * (MAX_IMAGE_CNT + 1)
+        )
+
+        serializer = NewsSerializer()
+        with pytest.raises(ValidationError):
+            serializer.validate(payload)
+
+    @pytest.mark.parametrize('ftype', ['help-articles', 'news'])
+    def test_article_update_clear_gallery(self, ftype, news_factory,
+                                          help_article_factory,
+                                          gallery_factory
+                                          ):
+        serializer = (
+            NewsSerializer if ftype == 'news' else HelpArticleSerializer)
+        my_factory = (
+            news_factory if ftype == 'news' else help_article_factory)
+        my_gallery = gallery_factory.create_batch(3)
+        my_obj = my_factory.create(gallery=my_gallery)
+
+        assert my_obj.gallery.count() == 3
+        image_data = {
+            'image': base64.b64encode(get_image_data()).decode('utf-8')
+        }
+
+        payload = factory.build(
+            dict,
+            FACTORY_CLASS=news_factory,
+            gallery=[image_data] * MAX_IMAGE_CNT
+        )
+
+        my_serializer = serializer(my_obj, data=payload, partial=True)
+        assert my_serializer.is_valid()
+
+        my_serializer.save()
+
+        assert my_obj.gallery.count() == MAX_IMAGE_CNT

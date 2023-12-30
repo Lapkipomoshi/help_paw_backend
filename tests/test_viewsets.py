@@ -7,12 +7,14 @@ from chat.serializers import (ChatListSerializer, ChatSerializer,
                               MessageSerializer)
 from chat.views import MessageViewSet
 from faker import Faker
+from gallery.models import Image
 from info.models import News, Vacancy
 from info.serializers import (HelpArticleSerializer,
                               HelpArticleShortSerializer, NewsSerializer,
                               NewsShortSerializer, VacancyReadSerializer,
-                              EducationSerializer, ScheduleSerializer)
-from info.views import MyShelterNewsViewSet, NewsViewSet
+                              VacancyWriteSerializer)
+from info.views import (MyShelterNewsViewSet, MyShelterVacancyViewSet,
+                        NewsViewSet)
 from shelters.models import Pet, Shelter
 from shelters.serializers import ShelterSerializer, ShelterShortSerializer
 from shelters.views import ShelterViewSet
@@ -208,7 +210,8 @@ class TestSheltersViewSets:
 
         assert owner_before != my_shelter.owner
 
-    def test_pet_adopt(self, user, api_client, pet_factory, shelter_factory):
+    def test_my_shelter_pet_adopt(self, user, api_client, pet_factory,
+                                  shelter_factory):
         my_shelter = shelter_factory(owner=user)
         my_pet = pet_factory.create(shelter=my_shelter, is_adopted=False)
 
@@ -223,9 +226,23 @@ class TestSheltersViewSets:
 
         assert reread_pet.is_adopted
 
+    def test_my_shelter_pet_get_queryset(self, user, api_client, pet_factory,
+                                         shelter_factory):
+        my_shelter = shelter_factory(owner=user)
+        my_pet = pet_factory.create(shelter=my_shelter)
+        pet_factory.create_batch(3)
+
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(self.endpoint + f'my-shelter/pets/')
+
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert my_pet.name == response.data[0].get('name')
+
     def test_news_create(self, rf, news_factory, user):
 
-        url = self.endpoint + f'news/'
+        url = self.endpoint + 'news/'
 
         payload = factory.build(
             dict,
@@ -259,8 +276,9 @@ class TestSheltersViewSets:
                               ('shelters/?warnings=yellow', 2),
                               ('shelters/?warnings=green', 1)]
                              )
-    def test_shelter_filters(self, url, count, task_factory, shelter_factory,
-                             api_client):
+    def test_shelter_filters_get_by_colour(self, url, count, task_factory,
+                                           shelter_factory,
+                                           api_client):
         task_factory.create_batch(3, is_emergency=True)
         task_factory.create_batch(2)
         shelter_factory.create()
@@ -269,6 +287,83 @@ class TestSheltersViewSets:
 
         assert response.status_code == 200
         assert len(json.loads(response.content)) == count
+
+    def test_shelter_toggle_is_favourite(self, user, api_client,
+                                         shelter_factory):
+
+        my_shelter = shelter_factory.create()
+        api_client.force_authenticate(user)
+        response = api_client.post(
+            self.endpoint + f'shelters/{my_shelter.pk}/favourite/')
+
+        assert response.status_code == 204
+        assert user.subscription_shelter.count() == 1
+
+        api_client.force_authenticate(user)
+        response = api_client.delete(
+            self.endpoint + f'shelters/{my_shelter.pk}/favourite/')
+
+        assert response.status_code == 204
+        assert user.subscription_shelter.count() == 0
+
+    def test_shelter_filters_get_favourite(self, user, api_client,
+                                           shelter_factory):
+        shelter_factory.create_batch(3)
+        my_shelter = shelter_factory.create()
+        api_client.force_authenticate(user)
+
+        response = api_client.get(
+            self.endpoint + 'shelters/?is_favourite=False')
+
+        assert response.status_code == 200
+        assert len(response.data) == 4
+
+        response = api_client.get(
+            self.endpoint + 'shelters/?is_favourite=True')
+
+        assert response.status_code == 200
+        assert len(response.data) == 0
+
+        api_client.post(
+            self.endpoint + f'shelters/{my_shelter.pk}/favourite/')
+
+        response = api_client.get(
+            self.endpoint + 'shelters/?is_favourite=True')
+
+        assert response.status_code == 200
+        assert response.data[0].get('id') == my_shelter.id
+        assert len(response.data) == 1
+
+    @pytest.mark.skip
+    def test_shelter_filters_get_helped(self):
+        pass
+
+    def test_my_shelter_get_object(self, user, api_client, shelter_factory):
+
+        shelter_factory.create_batch(3)
+        my_shelter = shelter_factory.create(owner=user)
+
+        api_client.force_authenticate(user)
+
+        response = api_client.get(self.endpoint + 'my-shelter/0/')
+
+        assert response.status_code == 200
+        assert response.data.get('id') == my_shelter.id
+
+    def test_my_shelter_get_perform_destroy(self, user, api_client,
+                                            shelter_factory):
+
+        approved = shelter_factory.create(owner=user)
+        api_client.force_authenticate(user)
+        response = api_client.delete(self.endpoint + 'my-shelter/0/')
+
+        assert response.status_code == 204
+        assert not approved.is_approved
+
+        response = api_client.delete(self.endpoint + 'my-shelter/0/')
+
+        assert response.status_code == 204
+        assert Shelter.objects.count() == 0
 
 
 class TestInfoViewSets:
@@ -479,9 +574,8 @@ class TestInfoViewSets:
                                                education_factory,
                                                schedule_factory):
         shelter = shelter_factory.create(owner=user)
-
-        education = EducationSerializer(education_factory.build())
-        schedule = ScheduleSerializer(schedule_factory.build())
+        education = education_factory.create()
+        schedule = schedule_factory.create()
 
         url = self.endpoint + f'my-shelter/vacancies/'
 
@@ -489,8 +583,8 @@ class TestInfoViewSets:
             dict,
             FACTORY_CLASS=vacancy_factory,
             shelter=None,
-            education=education.data,
-            schedule=[schedule.data, ]
+            education=education.slug,
+            schedule=[schedule.slug, ]
         )
 
         request = rf.post(
@@ -500,15 +594,60 @@ class TestInfoViewSets:
         )
         request.user = user
 
-        serializer = VacancyReadSerializer(data=payload,
-                                           context={'request': request})
+        serializer = VacancyWriteSerializer(data=payload,
+                                            context={'request': request})
         assert serializer.is_valid()
 
-        # FIXME
-        # serializer.save()
-        #
-        # view = MyShelterVacancyViewSet(request=request)
-        # view.perform_create(serializer)
-        #
-        # my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
-        # assert my_vac.shelter == shelter
+        serializer.save()
+
+        view = MyShelterVacancyViewSet(request=request)
+        view.perform_create(serializer)
+
+        my_vac = Vacancy.objects.get(pk=serializer.data.get('id'))
+        assert my_vac.shelter == shelter
+
+    def test_vacancy_get_serializer(self, admin, api_client, vacancy_factory,
+                                    education_factory,
+                                    schedule_factory):
+
+        url = self.endpoint + 'vacancies/'
+        vacancy_factory.create()
+        response = api_client.get(url)
+
+        assert response.status_code == 200
+        assert isinstance(response.data.serializer.child,
+                          VacancyReadSerializer)
+
+        education = education_factory.create()
+        schedule = schedule_factory.create()
+
+        payload = factory.build(
+            dict,
+            FACTORY_CLASS=vacancy_factory,
+            education=education.slug,
+            schedule=[schedule.slug, ]
+        )
+        api_client.force_authenticate(admin)
+        response = api_client.post(url, payload)
+
+        assert response.status_code == 201
+        assert isinstance(response.data.serializer,
+                          VacancyWriteSerializer)
+
+    @pytest.mark.parametrize('url', ['help-articles/', 'news/'])
+    def test_help_article_news_factory_destroy(self, url, admin, api_client,
+                                               help_article_factory,
+                                               news_factory,
+                                               gallery_factory):
+
+        my_factory = news_factory if url == 'news/' else help_article_factory
+
+        my_gallery = gallery_factory.create_batch(3)
+        assert Image.objects.count() == 3
+
+        my_obj = my_factory.create(gallery=my_gallery)
+
+        api_client.force_authenticate(admin)
+        api_client.delete(f'{self.endpoint}{url}{my_obj.pk}/')
+
+        assert Image.objects.count() == 0

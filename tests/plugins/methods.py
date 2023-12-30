@@ -1,8 +1,10 @@
 import io
+
 from PIL import Image as PIL_Image
 
 
 def get_image_data(target_size_bytes=1000):
+    PIL_Image.MAX_IMAGE_PIXELS = None
     size = 10000
     while True:
         image = PIL_Image.new("RGB", (size, size))

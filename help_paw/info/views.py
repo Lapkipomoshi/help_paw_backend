@@ -27,10 +27,8 @@ class ArticleViewSet(viewsets.ModelViewSet):
         for image in instance.gallery.all():
             if isinstance(self, HelpArticleViewSet):
                 objects = image.helparticle_related.all()
-            elif isinstance(self, NewsViewSet):
-                objects = image.news_related.all()
             else:
-                raise NotImplementedError('Неподдерживаемый вьюсет')
+                objects = image.news_related.all()
 
             if len(objects) == 1 and objects[0] == instance:
                 image.delete()
@@ -53,14 +51,12 @@ class NewsViewSet(ArticleViewSet):
                 'shelter').only(
                 'id', 'pub_date', 'profile_image', 'header', 'shelter__name'
             )
-        else:
-            return News.objects.filter(**filter_kwargs)
+        return News.objects.filter(**filter_kwargs)
 
     def get_serializer_class(self):
         if self.action == 'list':
             return NewsShortSerializer
-        else:
-            return NewsSerializer
+        return NewsSerializer
 
 
 class HelpArticleViewSet(ArticleViewSet):
@@ -69,14 +65,12 @@ class HelpArticleViewSet(ArticleViewSet):
     def get_queryset(self):
         if self.action == 'list':
             return HelpArticle.objects.only('id', 'header', 'profile_image')
-        else:
-            return HelpArticle.objects.all()
+        return HelpArticle.objects.all()
 
     def get_serializer_class(self):
         if self.action == 'list':
             return HelpArticleShortSerializer
-        else:
-            return HelpArticleSerializer
+        return HelpArticleSerializer
 
 
 class MyShelterNewsViewSet(NewsViewSet):

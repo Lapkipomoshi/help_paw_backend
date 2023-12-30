@@ -95,26 +95,3 @@ def admin_client(token_admin):
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {token_admin["access"]}')
     return client
-
-
-# # from rest_framework.permissions import IsAuthenticated
-# from api.permissions import (IsOwnerAdminOrReadOnly, IsAdminModerOrReadOnly,
-#                              IsShelterOwnerOrAdmin)
-# from unittest import mock
-#
-#
-# @pytest.fixture(scope="session", autouse=True)
-# def mock_views_permissions():
-#     # little util I use for testing for DRY when patching multiple objects
-#     patch_perm = lambda perm: mock.patch.multiple(
-#         perm,
-#         has_permission=mock.Mock(return_value=True),
-#         has_object_permission=mock.Mock(return_value=True),
-#     )
-#     with (
-#         patch_perm(IsOwnerAdminOrReadOnly),
-#         patch_perm(IsAdminModerOrReadOnly),
-#         patch_perm(IsShelterOwnerOrAdmin),
-#         # ...add other permissions you may have below
-#     ):
-#         yield

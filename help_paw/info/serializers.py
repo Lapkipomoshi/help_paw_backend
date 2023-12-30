@@ -43,7 +43,7 @@ class VacancyWriteSerializer(VacancyReadSerializer):
 
 class ArticleSerializer(serializers.ModelSerializer):
     profile_image = Base64ImageField()
-    pub_date = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
+    pub_date = serializers.DateTimeField(read_only=True, format='%d.%m.%Y')
     gallery = ImageSerializer(many=True, required=False,
                               validators=[ImageValidator()])
 
@@ -67,10 +67,8 @@ class ArticleSerializer(serializers.ModelSerializer):
 
         if isinstance(self, NewsSerializer):
             instance = News.objects.create(**validated_data)
-        elif isinstance(self, HelpArticleSerializer):
-            instance = HelpArticle.objects.create(**validated_data)
         else:
-            raise NotImplementedError('Неподдерживаемый сериализатор')
+            instance = HelpArticle.objects.create(**validated_data)
 
         objects = [Image(**image) for image in gallery]
         images = Image.objects.bulk_create(objects)
@@ -83,10 +81,8 @@ class ArticleSerializer(serializers.ModelSerializer):
 
             if isinstance(self, NewsSerializer):
                 objects = image.news_related.all()
-            elif isinstance(self, HelpArticleSerializer):
-                objects = image.helparticle_related.all()
             else:
-                raise NotImplementedError('Неподдерживаемый сериализатор')
+                objects = image.helparticle_related.all()
 
             if len(objects) == 1 and objects[0] == instance:
                 image.delete()

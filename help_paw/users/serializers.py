@@ -13,7 +13,7 @@ User = get_user_model()
 class EmailResetConfirmSerializer(UidAndTokenSerializer):
     new_email = serializers.SerializerMethodField()
 
-    def get_new_email(self, obj):
+    def get_new_email(self, obj) -> str:
         try:
             decode = jwt.decode(
                 self.initial_data['new_email'],
@@ -50,4 +50,5 @@ class EmailSerializer(serializers.Serializer):
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError(
-                'Пользователь с таким email уже существуте')
+                'Пользователь с таким email уже существует')
+        return value

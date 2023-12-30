@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'drf_yasg',
+    'drf_spectacular',
     'rest_framework',
     'django_extensions',
     'django_filters',
@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'chat.apps.ChatConfig',
     'gallery.apps.GalleryConfig',
+    'payments.apps.PaymentsConfig',
     'django_cleanup.apps.CleanupConfig',
     'corsheaders'
 ]
@@ -173,7 +174,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination'
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
 }
 
 DJOSER = {
@@ -196,6 +198,14 @@ DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}/',
     'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True,
     'USERNAME_RESET_CONFIRM_URL': 'email-reset/{uid}/{token}/'
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Lapkipomoshi',
+    'DESCRIPTION': 'Your project description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_COERCE_PATH_PK_SUFFIX': True
 }
 
 # 1 day
@@ -231,3 +241,6 @@ if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     CORS_ALLOWED_ORIGINS = ["https://lapkipomoshi.ru"]
+
+YOOKASSA_CLIENT_ID = os.getenv('YOOKASSA_CLIENT_ID', default='0i9lo0nfqhka6een9pg653uj9cj55p48')
+YOOKASSA_CLIENT_SECRET = os.getenv('YOOKASSA_CLIENT_SECRET', default='it61yCkVUgHhxRKldNs8zJdfd50IrViZDMKlxZcfUBBisQYYLDPBX6ohZsdlpkCY')

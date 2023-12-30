@@ -44,6 +44,7 @@ user_router.register(r'users', CustomUserViewSet, basename='users')
 
 urlpatterns = [
     path('v1/', include(v1_router.urls)),
+    path('v1/payments/', include('payments.urls')),
     path('auth/', include(user_router.urls)),
     path('auth/', include('djoser.urls.jwt')),
 ]

@@ -5,6 +5,7 @@ import factory
 from chat.models import Chat, Message
 from django.core.files.uploadedfile import SimpleUploadedFile
 from faker import Faker
+from gallery.models import Image as Img
 from info.models import (FAQ, Education, HelpArticle, News, Schedule,
                          StaticInfo, Vacancy)
 from PIL import Image
@@ -99,7 +100,9 @@ class PetFactory(factory.django.DjangoModelFactory):
     name = fake.name()
     animal_type = factory.SubFactory(AnimalTypeFactory)
     sex = 'other'
+    breed = 'dog'
     birth_date = fake.date()
+    admission_date = fake.date()
     about = fake.text()
     is_adopted = fake.boolean()
     shelter = factory.SubFactory(ShelterFactory)
@@ -112,8 +115,13 @@ class TaskFactory(factory.django.DjangoModelFactory):
     shelter = factory.SubFactory(ShelterFactory)
     name = fake.name()
     description = fake.text()
-    # is_emergency = False
-    # is_finished = False
+
+
+class GalleryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Img
+
+    image = factory.django.ImageField(color='blue')
 
 
 class NewsFactory(factory.django.DjangoModelFactory):
@@ -126,6 +134,15 @@ class NewsFactory(factory.django.DjangoModelFactory):
     on_main = True
     profile_image = ''
 
+    @factory.post_generation
+    def gallery(self, create, extracted):
+        if not create:
+            return
+
+        if extracted:
+            for image in extracted:
+                self.gallery.add(image)
+
 
 class HelpArticleFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -135,6 +152,15 @@ class HelpArticleFactory(factory.django.DjangoModelFactory):
     text = fake.text()
     source = fake.url()
     profile_image = ''
+
+    @factory.post_generation
+    def gallery(self, create, extracted):
+        if not create:
+            return
+
+        if extracted:
+            for image in extracted:
+                self.gallery.add(image)
 
 
 class FAQFactory(factory.django.DjangoModelFactory):
