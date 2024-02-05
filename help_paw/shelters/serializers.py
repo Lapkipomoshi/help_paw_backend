@@ -57,21 +57,36 @@ class ShelterSerializer(serializers.ModelSerializer):
     working_from_hour = serializers.TimeField(format='%H:%M')
     working_to_hour = serializers.TimeField(format='%H:%M')
     is_favourite = serializers.SerializerMethodField()
-    count_vacancies = serializers.IntegerField(read_only=True)
-    count_pets = serializers.IntegerField(read_only=True)
-    count_news = serializers.IntegerField(read_only=True)
-    count_tasks = serializers.IntegerField(read_only=True)
+    count_vacancies = serializers.SerializerMethodField(read_only=True)
+    count_pets = serializers.SerializerMethodField(read_only=True)
+    count_news = serializers.SerializerMethodField(read_only=True)
+    count_tasks = serializers.SerializerMethodField(read_only=True)
+    is_partner = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         exclude = ('is_approved',)
         model = Shelter
 
-    # TODO Add logic when payment added
     def get_money_collected(self, obj) -> float:
-        return 0
+        return sum(obj.payments.values_list('amount', flat=True))
 
     def get_animals_adopted(self, obj) -> int:
         return obj.pets.filter(is_adopted=True).count()
+
+    def get_count_vacancies(self, obj) -> int:
+        return obj.vacancy.count()
+
+    def get_count_pets(self, obj) -> int:
+        return obj.pets.filter(is_adopted=False).count()
+
+    def get_count_news(self, obj) -> int:
+        return obj.news.count()
+
+    def get_count_tasks(self, obj) -> int:
+        return obj.tasks.count()
+
+    def get_is_partner(self, obj) -> bool:
+        return obj.yookassa_token.exists()
 
     def get_is_favourite(self, obj) -> bool:
         user = self.context['request'].user

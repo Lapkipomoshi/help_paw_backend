@@ -63,7 +63,7 @@ def add_oauth_token_with_webhooks_to_shelter(code: Optional[str],
                                              state: str) -> None:
     """Записывает OAuth токен приюта в БД,
     и привязывает к нему вебхуки о статусах пожертвований."""
-    if error:
+    if error is not None:
         raise ValidationError(detail=error, code=400)
     try:
         decode = jwt.decode(state, settings.SECRET_KEY, algorithms=['HS256'])
