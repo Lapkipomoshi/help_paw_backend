@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -33,12 +32,7 @@ class ShelterViewSet(viewsets.ModelViewSet):
                 'id', 'name', 'address', 'working_from_hour',
                 'working_to_hour', 'logo', 'profile_image', 'long', 'lat'
             )
-        return Shelter.approved.annotate(
-                count_vacancies=Count('vacancy'),
-                count_pets=Count('pets'),
-                count_news=Count('news'),
-                count_tasks=Count('tasks')
-            )
+        return Shelter.approved.all()
 
     def get_serializer_class(self):
         if self.action in ('list', 'on_main',):

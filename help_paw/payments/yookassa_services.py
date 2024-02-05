@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import APIException
 from yookassa import Configuration, Payment, Webhook
 from yookassa.domain.notification import WebhookNotification
 
@@ -57,14 +57,11 @@ def get_oauth_token_for_shelter(code: str) -> tuple[str, int]:
     """Запрашивает OAuth токен для магазина партнера,
     возвращает токен и время его истечения в секундах."""
     url = 'https://yookassa.ru/oauth/v2/token'
-    data = {'grant_type': 'authorization_code',
-            'code': code,
-            'client_id': settings.YOOKASSA_CLIENT_ID,
-            'client_secret': settings.YOOKASSA_CLIENT_SECRET
-            }
-    response = requests.post(url, data)
+    data = {'grant_type': 'authorization_code', 'code': code}
+    auth = (settings.YOOKASSA_CLIENT_ID, settings.YOOKASSA_CLIENT_SECRET)
+    response = requests.post(url=url, data=data, auth=auth)
     if response.status_code != 200:
-        raise ValidationError(code=400)
+        raise APIException(detail=response.json())
     data = response.json()
     access_token = data.get('access_token')
     expires_in_seconds = int(data.get('expires_in'))
