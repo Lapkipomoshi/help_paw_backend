@@ -242,5 +242,5 @@ if DEBUG:
 else:
     CORS_ALLOWED_ORIGINS = ["https://lapkipomoshi.ru"]
 
-YOOKASSA_CLIENT_ID = os.getenv('YOOKASSA_CLIENT_ID', default='0i9lo0nfqhka6een9pg653uj9cj55p48')
-YOOKASSA_CLIENT_SECRET = os.getenv('YOOKASSA_CLIENT_SECRET', default='it61yCkVUgHhxRKldNs8zJdfd50IrViZDMKlxZcfUBBisQYYLDPBX6ohZsdlpkCY')
+YOOKASSA_CLIENT_ID = os.getenv('YOOKASSA_CLIENT_ID')
+YOOKASSA_CLIENT_SECRET = os.getenv('YOOKASSA_CLIENT_SECRET')
