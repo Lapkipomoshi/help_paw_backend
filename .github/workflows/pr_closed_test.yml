@@ -79,6 +79,8 @@ jobs:
             echo DEBUG=${{ secrets.TEST_DEBUG }} >> .env
             echo EMAIL_BACKEND_TYPE=${{ secrets.EMAIL_BACKEND_TYPE }} >> .env
             echo REACT_APP_SERVER_TYPE=${{ secrets.REACT_APP_SERVER_TYPE_TEST }} >> .env
+            echo YOOKASSA_CLIENT_ID=${{ secrets.YOOKASSA_CLIENT_ID }} >> .env
+            echo YOOKASSA_CLIENT_SECRET=${{ secrets.YOOKASSA_CLIENT_SECRET }} >> .env
             sudo docker-compose pull
             sudo docker-compose up -d
 
