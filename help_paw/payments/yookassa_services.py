@@ -13,19 +13,22 @@ def yookassa_payment_create(amount: Decimal, token: str) -> tuple[str, str]:
     ссылку на подтверждение платежа и id платежа."""
     Configuration.configure_auth_token(token)
     is_test_payment = settings.DEBUG
-    yookassa_payment = Payment.create({
-        "amount": {
-            "value": f"{amount}",
-            "currency": "RUB"
-        },
-        "confirmation": {
-            "type": "redirect",
-            "return_url": "https://lapkipomoshi.ru/"
-        },
-        "capture": True,
-        "refundable": False,
-        "test": is_test_payment
-    })
+    try:
+        yookassa_payment = Payment.create({
+            "amount": {
+                "value": f"{amount}",
+                "currency": "RUB"
+            },
+            "confirmation": {
+                "type": "redirect",
+                "return_url": "https://lapkipomoshi.ru/"
+            },
+            "capture": True,
+            "refundable": False,
+            "test": is_test_payment
+        })
+    except requests.exceptions.RequestException:
+        raise APIException(detail='Yookassa service unavailable')
     payment_confirm_url = yookassa_payment.confirmation.confirmation_url
     payment_id = yookassa_payment.id
     return payment_confirm_url, payment_id
@@ -34,14 +37,17 @@ def yookassa_payment_create(amount: Decimal, token: str) -> tuple[str, str]:
 def add_webhooks_to_shelter(token: str) -> None:
     """Добавляет вебхуки для платежей."""
     Configuration.configure_auth_token(token)
-    Webhook.add({
-        "event": "payment.succeeded",
-        "url": "https://lapkipomoshi.ru/api/v1/payments/webhook-callback/",
-    })
-    Webhook.add({
-        "event": "payment.canceled",
-        "url": "https://lapkipomoshi.ru/api/v1/payments/webhook-callback/",
-    })
+    try:
+        Webhook.add({
+            "event": "payment.succeeded",
+            "url": "https://lapkipomoshi.ru/api/v1/payments/webhook-callback/",
+        })
+        Webhook.add({
+            "event": "payment.canceled",
+            "url": "https://lapkipomoshi.ru/api/v1/payments/webhook-callback/",
+        })
+    except requests.exceptions.RequestException:
+        raise APIException(detail='Yookassa service unavailable')
 
 
 def parse_webhook_callback(event_json: dict) -> tuple[str, bool]:
@@ -59,9 +65,10 @@ def get_oauth_token_for_shelter(code: str) -> tuple[str, int]:
     url = 'https://yookassa.ru/oauth/v2/token'
     data = {'grant_type': 'authorization_code', 'code': code}
     auth = (settings.YOOKASSA_CLIENT_ID, settings.YOOKASSA_CLIENT_SECRET)
-    response = requests.post(url=url, data=data, auth=auth)
-    if response.status_code != 200:
-        raise APIException(detail=response.json())
+    try:
+        response = requests.post(url=url, data=data, auth=auth)
+    except requests.exceptions.RequestException:
+        raise APIException(detail='Yookassa service unavailable')
     data = response.json()
     access_token = data.get('access_token')
     expires_in_seconds = int(data.get('expires_in'))

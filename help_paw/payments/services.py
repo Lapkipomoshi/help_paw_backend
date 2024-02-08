@@ -1,6 +1,5 @@
 from datetime import timedelta
 from decimal import Decimal
-from typing import Optional
 
 import jwt
 from django.conf import settings
@@ -21,8 +20,9 @@ User = get_user_model()
 
 
 def get_payment_confirm_url(amount: Decimal,
-                            user: Optional[User],
-                            shelter_id: int) -> dict[str, str]:
+                            user: User | None,
+                            shelter_id: int
+                            ) -> dict[str, str]:
     """Создает запись пожертвования в БД,
     возвращает ссылку для подтверждения платежа."""
     oauth_token = get_object_or_404(YookassaOAuthToken, shelter=shelter_id)
@@ -58,21 +58,22 @@ def get_partner_link(user: User) -> dict[str, str]:
     return {'partner_link': partner_link}
 
 
-def add_oauth_token_with_webhooks_to_shelter(code: Optional[str],
-                                             error: Optional[str],
-                                             state: str) -> None:
+def add_oauth_token_with_webhooks_to_shelter(code: str | None,
+                                             error: str | None,
+                                             state: str
+                                             ) -> None:
     """Записывает OAuth токен приюта в БД,
     и привязывает к нему вебхуки о статусах пожертвований."""
     if error is not None:
-        raise ValidationError(detail=error, code=400)
+        raise ValidationError(detail=error)
     try:
         decode = jwt.decode(state, settings.SECRET_KEY, algorithms=['HS256'])
     except jwt.DecodeError:
-        raise ValidationError(detail='Неверный параметр "state"', code=400)
+        raise ValidationError(detail='Неверный параметр "state"')
     access_token, expires_in_seconds = get_oauth_token_for_shelter(code)
+    add_webhooks_to_shelter(access_token)
     shelter = get_object_or_404(Shelter, tin=decode.get('tin'))
     expires_at = timezone.now() + timedelta(seconds=expires_in_seconds)
     YookassaOAuthToken.objects.create(shelter=shelter,
                                       token=access_token,
                                       expires_at=expires_at)
-    add_webhooks_to_shelter(access_token)

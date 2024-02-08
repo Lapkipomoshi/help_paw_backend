@@ -43,4 +43,5 @@ def partner_link_callback(request):
     error = request.query_params.get('error')
     state = request.query_params.get('state')
     add_oauth_token_with_webhooks_to_shelter(code, error, state)
-    return Response(status=status.HTTP_201_CREATED)
+    return Response(data='Your shelter successfully added to partner program',
+                    status=status.HTTP_201_CREATED)
