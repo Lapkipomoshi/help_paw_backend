@@ -4,6 +4,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from gallery.serializers import ImageSerializer, ImageValidator
+from payments.models import YookassaOAuthToken
 from shelters.models import AnimalType, Pet, Shelter
 
 
@@ -86,7 +87,7 @@ class ShelterSerializer(serializers.ModelSerializer):
         return obj.tasks.count()
 
     def get_is_partner(self, obj) -> bool:
-        return obj.yookassa_token.exists()
+        return YookassaOAuthToken.objects.filter(shelter=obj).exists()
 
     def get_is_favourite(self, obj) -> bool:
         user = self.context['request'].user
