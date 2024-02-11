@@ -10,7 +10,7 @@ User = get_user_model()
 
 class YookassaOAuthToken(models.Model):
     """OAuth токен для создания платежей от имени приюта"""
-    shelter = models.ForeignKey(
+    shelter = models.OneToOneField(
         Shelter,
         verbose_name='Приют',
         on_delete=models.CASCADE,
