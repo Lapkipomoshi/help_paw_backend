@@ -10,9 +10,9 @@ from rest_framework.exceptions import ValidationError
 
 from payments.models import Donation, YookassaOAuthToken
 from payments.yookassa_services import (add_webhooks_to_shelter,
+                                        check_payment_status,
                                         get_oauth_token_for_shelter,
                                         make_partner_link,
-                                        parse_webhook_callback,
                                         yookassa_payment_create)
 from shelters.models import Shelter
 
@@ -21,13 +21,15 @@ User = get_user_model()
 
 def get_payment_confirm_url(amount: Decimal,
                             user: User | None,
-                            shelter_id: int
-                            ) -> dict[str, str]:
+                            shelter_id: int) -> dict[str, str]:
     """Создает запись пожертвования в БД,
     возвращает ссылку для подтверждения платежа."""
     oauth_token = get_object_or_404(YookassaOAuthToken, shelter=shelter_id)
+    if oauth_token.is_expired:
+        raise ValidationError(detail='Shelter cant accept payments now')
     payment_confirm_url, external_id = yookassa_payment_create(amount,
-                                                               oauth_token.token)
+                                                               oauth_token.token,
+                                                               shelter_id)
     Donation.objects.get_or_create(
         shelter=oauth_token.shelter,
         user=user,
@@ -38,7 +40,7 @@ def get_payment_confirm_url(amount: Decimal,
 
 def finish_payment(event_json: dict) -> None:
     """Изменяет поле is_successful пожертвования в БД на True или удаляет его."""
-    external_id, is_successful = parse_webhook_callback(event_json)
+    external_id, is_successful = check_payment_status(event_json)
     payment = get_object_or_404(Donation, external_id=external_id)
     if is_successful:
         payment.is_successful = True
@@ -60,8 +62,7 @@ def get_partner_link(user: User) -> dict[str, str]:
 
 def add_oauth_token_with_webhooks_to_shelter(code: str | None,
                                              error: str | None,
-                                             state: str
-                                             ) -> None:
+                                             state: str) -> None:
     """Записывает OAuth токен приюта в БД,
     и привязывает к нему вебхуки о статусах пожертвований."""
     if error is not None:
@@ -74,6 +75,7 @@ def add_oauth_token_with_webhooks_to_shelter(code: str | None,
     add_webhooks_to_shelter(access_token)
     shelter = get_object_or_404(Shelter, tin=decode.get('tin'))
     expires_at = timezone.now() + timedelta(seconds=expires_in_seconds)
-    YookassaOAuthToken.objects.create(shelter=shelter,
-                                      token=access_token,
-                                      expires_at=expires_at)
+    YookassaOAuthToken.objects.update_or_create(
+        shelter=shelter,
+        defaults={'token': access_token, 'expires_at': expires_at}
+    )

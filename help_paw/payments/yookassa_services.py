@@ -3,12 +3,14 @@ from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ValidationError
 from yookassa import Configuration, Payment, Webhook
-from yookassa.domain.notification import WebhookNotification
+from yookassa.domain.notification import PaymentWebhookNotification
 
 
-def yookassa_payment_create(amount: Decimal, token: str) -> tuple[str, str]:
+def yookassa_payment_create(amount: Decimal,
+                            token: str,
+                            shelter_id: int) -> tuple[str, str]:
     """Создает объект платежа Юкассы и возвращает
     ссылку на подтверждение платежа и id платежа."""
     Configuration.configure_auth_token(token)
@@ -21,7 +23,7 @@ def yookassa_payment_create(amount: Decimal, token: str) -> tuple[str, str]:
             },
             "confirmation": {
                 "type": "redirect",
-                "return_url": "https://lapkipomoshi.ru/"
+                "return_url": f"https://lapkipomoshi.ru/shelters/{shelter_id}/about"
             },
             "capture": True,
             "refundable": False,
@@ -50,12 +52,16 @@ def add_webhooks_to_shelter(token: str) -> None:
         raise APIException(detail='Yookassa service unavailable')
 
 
-def parse_webhook_callback(event_json: dict) -> tuple[str, bool]:
+def check_payment_status(event_json: dict) -> tuple[str, bool]:
     """Возвращает id и статус платежа
     из оповещения об изменении статуса платежа юкассы."""
-    notification_object = WebhookNotification(event_json)
-    external_id = notification_object.object.id
-    is_successful = notification_object.object.status == 'succeeded'
+    try:
+        notification_object = PaymentWebhookNotification(event_json)
+        external_id = notification_object.object.id
+        status = Payment.find_one(external_id).status
+    except Exception:
+        raise APIException()
+    is_successful = status == 'succeeded'
     return external_id, is_successful
 
 
@@ -69,6 +75,8 @@ def get_oauth_token_for_shelter(code: str) -> tuple[str, int]:
         response = requests.post(url=url, data=data, auth=auth)
     except requests.exceptions.RequestException:
         raise APIException(detail='Yookassa service unavailable')
+    if response.status_code != 200:
+        raise ValidationError(detail=response.json())
     data = response.json()
     access_token = data.get('access_token')
     expires_in_seconds = int(data.get('expires_in'))

@@ -9,12 +9,22 @@ class SheltersFilter(FilterSet):
         help_text=('Фильтрация приютов по необходимости поддержки, '
                    'возможные значения: "red", "yellow", "green"')
     )
-    is_favourite = BooleanFilter(method='get_favourite')
-    is_helped = BooleanFilter(method='get_helped')
+    is_favourite = BooleanFilter(
+        method='get_favourite',
+        help_text='true - отображает приюты добавленные пользователем в избранное, '
+                  'false - недобавленные. '
+                  'Для анонима всегда возращает пустой список'
+    )
+    is_helped = BooleanFilter(
+        method='get_helped',
+        help_text='true - отображает приюты которым пользователь жертвовал деньги, '
+                  'false - которым не жертвовал. '
+                  'Для анонима всегда возращает пустой список'
+    )
 
     class Meta:
         model = Shelter
-        fields = ('warnings', 'is_favourite')
+        fields = ('warnings', 'is_favourite', 'is_helped')
 
     # TODO Add logic when algorithm invented
     def get_by_colour(self, queryset, name, value):
@@ -27,15 +37,20 @@ class SheltersFilter(FilterSet):
         return queryset.none()
 
     def get_favourite(self, queryset, name, value):
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.none()
         if value:
             return queryset.filter(subscribers=self.request.user)
-        return queryset
+        return queryset.exclude(subscribers=self.request.user)
 
-    # TODO Add logic when payment added
     def get_helped(self, queryset, name, value):
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.none()
         if value:
-            return queryset.order_by('?')[:3]
-        return queryset
+            return queryset.filter(payments__user=self.request.user)
+        return queryset.exclude(payments__user=self.request.user)
 
 
 class PetFilter(FilterSet):
