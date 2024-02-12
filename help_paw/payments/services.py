@@ -10,46 +10,47 @@ from rest_framework.exceptions import ValidationError
 
 from payments.models import Donation, YookassaOAuthToken
 from payments.yookassa_services import (add_webhooks_to_shelter,
-                                        check_payment_status,
+                                        get_payment_data,
                                         get_oauth_token_for_shelter,
                                         make_partner_link,
-                                        yookassa_payment_create)
+                                        payment_create)
 from shelters.models import Shelter
 
 User = get_user_model()
 
 
 def get_payment_confirm_url(amount: Decimal,
-                            user: User | None,
-                            shelter_id: int) -> dict[str, str]:
+                            user: User,
+                            shelter_id: int) -> str:
     """Создает запись пожертвования в БД,
     возвращает ссылку для подтверждения платежа."""
     oauth_token = get_object_or_404(YookassaOAuthToken, shelter=shelter_id)
     if oauth_token.is_expired:
         raise ValidationError(detail='Shelter cant accept payments now')
-    payment_confirm_url, external_id = yookassa_payment_create(amount,
+    external_id, created_at, confirmation_url = payment_create(amount,
                                                                oauth_token.token,
                                                                shelter_id)
-    Donation.objects.get_or_create(
+    Donation.objects.create(
         shelter=oauth_token.shelter,
-        user=user,
+        user=user if user.is_authenticated else None,
         amount=amount,
-        external_id=external_id)
-    return {'payment_confirm_url': payment_confirm_url}
+        external_id=external_id,
+        created_at=created_at
+    )
+    return confirmation_url
 
 
 def finish_payment(event_json: dict) -> None:
-    """Изменяет поле is_successful пожертвования в БД на True или удаляет его."""
-    external_id, is_successful = check_payment_status(event_json)
-    payment = get_object_or_404(Donation, external_id=external_id)
-    if is_successful:
-        payment.is_successful = True
-        payment.save()
-    else:
-        payment.delete()
+    """Изменяет поле is_successful и сумму пожертвования в БД
+    на основе объекта платежа."""
+    external_id, is_successful, amount = get_payment_data(event_json)
+    donation = get_object_or_404(Donation, external_id=external_id)
+    donation.is_successful = is_successful
+    donation.amount = amount
+    donation.save()
 
 
-def get_partner_link(user: User) -> dict[str, str]:
+def get_partner_link(user: User) -> str:
     """Возврвщает ссылку для подключения к партнерской программе."""
     shelter_tin = get_object_or_404(Shelter, owner=user).tin
     state = jwt.encode(
@@ -57,7 +58,7 @@ def get_partner_link(user: User) -> dict[str, str]:
         key=settings.SECRET_KEY,
         algorithm='HS256')
     partner_link = make_partner_link(state)
-    return {'partner_link': partner_link}
+    return partner_link
 
 
 def add_oauth_token_with_webhooks_to_shelter(code: str | None,

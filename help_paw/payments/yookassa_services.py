@@ -8,15 +8,14 @@ from yookassa import Configuration, Payment, Webhook
 from yookassa.domain.notification import PaymentWebhookNotification
 
 
-def yookassa_payment_create(amount: Decimal,
-                            token: str,
-                            shelter_id: int) -> tuple[str, str]:
-    """Создает объект платежа Юкассы и возвращает
-    ссылку на подтверждение платежа и id платежа."""
+def payment_create(amount: Decimal,
+                   token: str,
+                   shelter_id: int) -> tuple[str, str, str]:
+    """Создает объект платежа Юкассы и возвращает его"""
     Configuration.configure_auth_token(token)
     is_test_payment = settings.DEBUG
     try:
-        yookassa_payment = Payment.create({
+        payment_object = Payment.create({
             "amount": {
                 "value": f"{amount}",
                 "currency": "RUB"
@@ -31,38 +30,35 @@ def yookassa_payment_create(amount: Decimal,
         })
     except requests.exceptions.RequestException:
         raise APIException(detail='Yookassa service unavailable')
-    payment_confirm_url = yookassa_payment.confirmation.confirmation_url
-    payment_id = yookassa_payment.id
-    return payment_confirm_url, payment_id
+    external_id = payment_object.id
+    created_at = payment_object.created_at
+    confirmation_url = payment_object.confirmation.confirmation_url
+    return external_id, created_at, confirmation_url
 
 
 def add_webhooks_to_shelter(token: str) -> None:
-    """Добавляет вебхуки для платежей."""
+    """Добавляет вебхук для платежей."""
     Configuration.configure_auth_token(token)
     try:
         Webhook.add({
             "event": "payment.succeeded",
             "url": "https://lapkipomoshi.ru/api/v1/payments/webhook-callback/",
         })
-        Webhook.add({
-            "event": "payment.canceled",
-            "url": "https://lapkipomoshi.ru/api/v1/payments/webhook-callback/",
-        })
     except requests.exceptions.RequestException:
         raise APIException(detail='Yookassa service unavailable')
 
 
-def check_payment_status(event_json: dict) -> tuple[str, bool]:
-    """Возвращает id и статус платежа
-    из оповещения об изменении статуса платежа юкассы."""
+def get_payment_data(event_json: dict) -> tuple[str, bool, Decimal]:
+    """Возвращает данные платежа для которого пришло
+    оповещения об изменении статуса."""
     try:
-        notification_object = PaymentWebhookNotification(event_json)
-        external_id = notification_object.object.id
-        status = Payment.find_one(external_id).status
+        external_id = PaymentWebhookNotification(event_json).object.id
+        payment_object = Payment.find_one(external_id)
+        is_successful = payment_object.paid
+        amount = payment_object.amount.value
     except Exception:
         raise APIException()
-    is_successful = status == 'succeeded'
-    return external_id, is_successful
+    return external_id, is_successful, amount
 
 
 def get_oauth_token_for_shelter(code: str) -> tuple[str, int]:
@@ -79,7 +75,7 @@ def get_oauth_token_for_shelter(code: str) -> tuple[str, int]:
         raise ValidationError(detail=response.json())
     data = response.json()
     access_token = data.get('access_token')
-    expires_in_seconds = int(data.get('expires_in'))
+    expires_in_seconds = data.get('expires_in')
     return access_token, expires_in_seconds
 
 
