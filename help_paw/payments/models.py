@@ -22,6 +22,13 @@ class YookassaOAuthToken(models.Model):
     def is_expired(self) -> bool:
         return timezone.now() > self.expires_at
 
+    class Meta:
+        verbose_name = 'OAuth токен приюта'
+        verbose_name_plural = 'OAuth токены приютов'
+
+    def __str__(self):
+        return self.shelter.name
+
 
 class Donation(models.Model):
     """Данные о пожертвовании"""
@@ -54,3 +61,11 @@ class Donation(models.Model):
         max_length=255,
         unique=True
     )
+    created_at = models.DateTimeField('Дата и время создания платежа')
+
+    class Meta:
+        verbose_name = 'Пожертвование'
+        verbose_name_plural = 'Пожертвования'
+
+    def __str__(self):
+        return f'{self.user} -> {self.shelter.name} сумма: {self.amount}'

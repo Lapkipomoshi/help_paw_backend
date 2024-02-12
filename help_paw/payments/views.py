@@ -15,12 +15,12 @@ from payments.services import (add_oauth_token_with_webhooks_to_shelter,
 def donate(request, shelter_id: int):
     serializer = DonateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user = request.user
-    payment_confirm_url = get_payment_confirm_url(
+    confirmation_url = get_payment_confirm_url(
         amount=serializer.validated_data.get('amount'),
-        user=user if user.is_authenticated else None,
+        user=request.user,
         shelter_id=shelter_id)
-    return Response(data=payment_confirm_url, status=status.HTTP_201_CREATED)
+    return Response(data={'payment_confirm_url': confirmation_url},
+                    status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
@@ -34,7 +34,7 @@ def webhook_callback(request):
 @permission_classes((IsShelterOwner,))
 def partner_link(request):
     url = get_partner_link(request.user)
-    return Response(data=url, status=status.HTTP_200_OK)
+    return Response(data={'partner_link': url}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
