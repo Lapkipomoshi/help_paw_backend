@@ -44,7 +44,9 @@ class Donation(models.Model):
         verbose_name='Пользователь',
         on_delete=models.SET_NULL,
         related_name='payments',
-        null=True
+        null=True,
+        blank=True,
+        default=None
     )
     amount = models.DecimalField(
         'Сумма',
