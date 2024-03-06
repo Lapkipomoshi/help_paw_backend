@@ -59,12 +59,6 @@ class User(AbstractUser):
         max_length=254,
         null=False
     )
-    donations_sum = models.DecimalField(
-        'Сумма пожертвований',
-        max_digits=8,
-        decimal_places=2,
-        default=0
-    )
 
     @property
     def is_admin(self):

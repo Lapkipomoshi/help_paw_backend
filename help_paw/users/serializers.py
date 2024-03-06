@@ -35,13 +35,19 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class CustomUserSerializer(UserSerializer):
     email = serializers.EmailField(read_only=True)
     own_shelter = ShelterShortSerializer(read_only=True, source='shelter')
+    donations_sum = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'username', 'status', 'donations_sum', 'own_shelter',
         )
-        read_only_fields = ('status', 'donations_sum',)
+        read_only_fields = ('status',)
+
+    def get_donations_sum(self, obj):
+        return sum(
+            obj.payments.filter(is_successful=True).values_list('amount', flat=True)
+        )
 
 
 class EmailSerializer(serializers.Serializer):
