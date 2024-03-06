@@ -3,6 +3,7 @@ import logging
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api.permissions import IsShelterOwner
@@ -14,6 +15,7 @@ from payments.services import (add_oauth_token_with_webhooks_to_shelter,
 logger = logging.getLogger('payments')
 
 
+@permission_classes((IsAuthenticated, AllowAny))
 @api_view(['POST'])
 def donate(request, shelter_id: int):
     logger.debug(f'{request.user} is {request.user.is_authenticated}')
@@ -34,8 +36,8 @@ def webhook_callback(request):
     return Response(status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
 @permission_classes((IsShelterOwner,))
+@api_view(['GET'])
 def partner_link(request):
     url = get_partner_link(request.user)
     return Response(data={'partner_link': url}, status=status.HTTP_200_OK)
