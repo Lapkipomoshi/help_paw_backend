@@ -22,6 +22,7 @@ services:
       python manage.py migrate && 
       gunicorn help_paw.wsgi:application --bind 0:8000"
     volumes:
+      - ./logs/:/app/logs/
       - static_value:/app/static_files/
       - media_value:/app/media/
     depends_on:

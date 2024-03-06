@@ -232,7 +232,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'payments_logs.log',
+            'filename': './logs/payments_logs.log',
             'maxBytes': 15728640,  # 15 MB
             'backupCount': 2,
             'formatter': 'simple',
