@@ -15,9 +15,9 @@ from payments.services import (add_oauth_token_with_webhooks_to_shelter,
 logger = logging.getLogger('payments')
 
 
-@permission_classes((IsAuthenticated, AllowAny))
 @api_view(['POST'])
 def donate(request, shelter_id: int):
+    print(request.user)
     logger.debug(f'{request.user} is {request.user.is_authenticated}')
     serializer = DonateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -36,8 +36,8 @@ def webhook_callback(request):
     return Response(status=status.HTTP_200_OK)
 
 
-@permission_classes((IsShelterOwner,))
 @api_view(['GET'])
+@permission_classes((IsShelterOwner,))
 def partner_link(request):
     url = get_partner_link(request.user)
     return Response(data={'partner_link': url}, status=status.HTTP_200_OK)
