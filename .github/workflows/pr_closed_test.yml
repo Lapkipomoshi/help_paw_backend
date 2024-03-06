@@ -51,14 +51,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_and_push_to_docker_hub
     steps:
-      - name: copy compose file to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.TEST_HOST }}
-          username: ${{ secrets.USER }}
-          password: ${{ secrets.PASSWORD }}
-          source: 'infra/docker-compose-test.yml'
-          target: 'test'
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
