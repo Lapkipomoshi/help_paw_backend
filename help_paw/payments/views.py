@@ -3,7 +3,7 @@ import logging
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.permissions import IsShelterOwner
@@ -16,8 +16,8 @@ logger = logging.getLogger('payments')
 
 
 @api_view(['POST'])
+@permission_classes((IsAuthenticated,))
 def donate(request, shelter_id: int):
-    print(request.user)
     logger.debug(f'{request.user} is {request.user.is_authenticated}')
     serializer = DonateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
