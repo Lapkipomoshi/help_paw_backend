@@ -221,6 +221,33 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
 }
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '|%(levelname)s| |%(asctime)s| |%(module)s| |%(funcName)s| message: %(message)s'
+        }
+    },
+    'handlers': {
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': './logs/payments_logs.log',
+            'maxBytes': 15728640,  # 15 MB
+            'backupCount': 2,
+            'formatter': 'simple',
+            'level': 'DEBUG'
+        }
+    },
+    'loggers': {
+        'payments': {
+            'level': 'DEBUG',
+            'handlers': ['file',],
+            'propagate': True
+        }
+    }
+}
+
 ALERT_TOKEN = os.getenv('BOT')
 ALERT_TO = os.getenv('ALERT_CHANNEL', default='217501082')
 

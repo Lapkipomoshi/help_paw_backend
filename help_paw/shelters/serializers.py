@@ -69,7 +69,9 @@ class ShelterSerializer(serializers.ModelSerializer):
         model = Shelter
 
     def get_money_collected(self, obj) -> float:
-        return sum(obj.payments.values_list('amount', flat=True))
+        return sum(
+            obj.payments.filter(is_successful=True).values_list('amount', flat=True)
+        )
 
     def get_animals_adopted(self, obj) -> int:
         return obj.pets.filter(is_adopted=True).count()
