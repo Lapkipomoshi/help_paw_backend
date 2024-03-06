@@ -1,4 +1,5 @@
 import json
+import logging
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -10,9 +11,12 @@ from payments.services import (add_oauth_token_with_webhooks_to_shelter,
                                finish_payment, get_partner_link,
                                get_payment_confirm_url)
 
+logger = logging.getLogger('payments')
+
 
 @api_view(['POST'])
 def donate(request, shelter_id: int):
+    logger.debug(f'{request.user} is {request.user.is_authenticated}')
     serializer = DonateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     confirmation_url = get_payment_confirm_url(
