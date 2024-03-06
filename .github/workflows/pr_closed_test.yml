@@ -57,7 +57,7 @@ jobs:
           host: ${{ secrets.TEST_HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASSWORD }}
-          source: 'infra/docker-compose-test.yml'
+          source: './infra/docker-compose-test.yml'
           target: '~/test/'
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
